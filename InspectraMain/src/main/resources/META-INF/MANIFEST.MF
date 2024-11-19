@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Main-Class: org.IAP491G3.Agent.Loader.AgentAttacher
+Agent-Class: org.IAP491G3.Agent.Loader.Agent
+Can-Retransform-Classes: True
+Can-Redefine-Classes: True
+
