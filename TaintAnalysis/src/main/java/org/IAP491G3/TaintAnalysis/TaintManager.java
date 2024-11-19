@@ -126,7 +126,6 @@ public class TaintManager extends IFDSSetUp {
         SootClass methodClass = Scene.v().getSootClass("java.lang.reflect.Method");
         SootMethodRef methodInvoke = new SootMethodRefImpl(methodClass, "invoke", Arrays.asList(RefType.v("java.lang.Object"), ArrayType.v(RefType.v("java.lang.Object"), 1)), RefType.v("java.lang.Object"), true);
         sinks.add(methodInvoke);
-
         return new SceneTransformer() {
             @Override
             protected void internalTransform(String phaseName, Map<String, String> options) {
@@ -135,15 +134,28 @@ public class TaintManager extends IFDSSetUp {
                 @SuppressWarnings({"rawtypes", "unchecked"})
                 JimpleIFDSSolver<?, ?> solver = new JimpleIFDSSolver<>(problem);
                 solver.solve();
-                IFDSSetUp.solver = solver;
+                org.IAP491G3.TaintAnalysis.base.IFDSSetUp.solver = solver;
             }
         };
+//        return new SceneTransformer() {
+//            @Override
+//            protected void internalTransform(String phaseName, Map<String, String> options) {
+//                JimpleBasedInterproceduralCFG icfg = new JimpleBasedInterproceduralCFG(false);
+//                IFDSTaintAnalysisProblem problem = new IFDSTaintAnalysisProblem(icfg, sources, sinks);
+//                @SuppressWarnings({"rawtypes", "unchecked"})
+//                JimpleIFDSSolver<?, ?> solver = new JimpleIFDSSolver<>(problem);
+//                solver.solve();
+//                IFDSSetUp.solver = solver;
+//            }
+//        };
     }
 
     private Set<String> getResult(Object analysis) {
         List<SootMethod> entryPoints = getEntryPointMethods(); // Get all entry points
         Set<String> result = new HashSet<>();
-
+        if (entryPoints.isEmpty()){
+            System.out.println("entryPoints is empty");
+        }
         for (SootMethod m : entryPoints) {
             System.out.println("Sootmethod: " + m.getName());
             // Skip methods that don't have an active body or are empty
@@ -210,6 +222,7 @@ public class TaintManager extends IFDSSetUp {
 //    }
     public void taint(Class<?> clazz) {
         System.out.println("================ TAINT METHOD EXECUTED !!!");
+        System.out.println("Taint method received: " + clazz.getName());
         JimpleIFDSSolver<?, ? extends InterproceduralCFG<Unit, SootMethod>> analysis = executeStaticAnalysis(clazz.getName());
         Set<String> defaultIDEResult = getResult(analysis);
 

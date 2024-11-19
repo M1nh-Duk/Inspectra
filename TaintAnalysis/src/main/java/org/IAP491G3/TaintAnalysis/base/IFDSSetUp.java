@@ -6,6 +6,7 @@ import soot.jimple.toolkits.ide.JimpleIFDSSolver;
 import soot.options.Options;
 
 import java.io.File;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +46,7 @@ public abstract class IFDSSetUp {
      */
     private void setupSoot(String targetTestClassName) {
         G.reset();
+        System.out.println("========== SETTING UP SOOT !");
         String userdir = System.getProperty("user.dir");
         String javaHome = System.getProperty("java.home");
 
@@ -71,16 +73,21 @@ public abstract class IFDSSetUp {
         Scene.v().addBasicClass("java.lang.Runtime", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.reflect.Method", SootClass.SIGNATURES);
         SootClass c = Scene.v().forceResolve(targetTestClassName, SootClass.BODIES);
+        System.out.println("========== forceResolve class success with class: " + targetTestClassName);
+
         if (c != null) {
             c.setApplicationClass();
         }
         Scene.v().loadNecessaryClasses();
+        System.out.println("========== DONE SET UP SOOT !");
+
     }
 
     protected List<SootMethod> getEntryPointMethods() {
         List<SootMethod> entryPoints = new ArrayList<>();
         for (SootClass c : Scene.v().getApplicationClasses()) {
             for (SootMethod m : c.getMethods()) {
+                System.out.println("SootMethod: "+m.getName());
                 if (m.hasActiveBody()) {
                     // Add all methods with active bodies as entry points
                     entryPoints.add(m);
