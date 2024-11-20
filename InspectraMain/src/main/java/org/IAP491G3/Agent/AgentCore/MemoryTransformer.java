@@ -145,85 +145,97 @@ public class MemoryTransformer implements ClassFileTransformer {
         }
     }
 
-    private static String generateInsertedCode() {
-        return "{ " +
-                "try { " +
-                "    System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
+//    private static String generateInsertedCode() {
+//        return "{ " +
+//                "try { " +
+//                "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
+////                "System.out.println(Thread.currentThread().getContextClassLoader());" +
+//
+//                    "System.out.println(\"Stack trace: \"); " +
+//                    "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
+//                    "StackTraceElement maliciousClass = null;" +
+//                    "for (int i = 2; i < stackTrace.length; i++) {" +
+//                        "StackTraceElement currentElement = stackTrace[i];" +
+//                        "String currentClassName = currentElement.getClassName();" +
+//                        "System.out.println(currentElement);" +
+//                        // Check if the current element is a JSP-generated class
+//                        "if (isGeneratedJspClass(currentClassName)) {" +
+//                            "System.out.println(\"JSP-generated method (potential malicious upload): \" + currentElement.getClassName() + \".\" + currentElement.getMethodName());" +
+//                            "maliciousClass = currentElement.getClassName();" +
+//                            "break;" +
+//                        "}" +
+//
+//                        // If current class is not Java core, keep checking until finding a framework class, set the developer class
+//                            // If the i +1 class is not framework class, jump into this if case
+//                        "if (i + 1 < stackTrace.length && !isFrameworkClass(stackTrace[i + 1].getClassName())) {" +
+//                            // Continue until finding a framework class
+//                            "int j = i;" +
+//                            "while (j < stackTrace.length && !isFrameworkClass(stackTrace[j].getClassName())) {" +
+//                                "j++;" +
+//                            "}" +
+//                            // Set the developer class as the current position - 1 and the previous one is malicious
+//                            "if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName())) {" +
+//                                "System.out.println(\"Closest developer method: \" + stackTrace[j - 2].getClassName() + \".\" + stackTrace[j - 2].getMethodName());" +
+//                                "maliciousClass = stackTrace[j - 2].getClassName();" +
+//                            "}" +
+//                            "else if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName()) && !isFrameworkClass(stackTrace[j+1].getClassName())) {\n" +
+//                                " j+=1;" +
+//                                " continue;" +
+//                            "}" +
+//                        "}" +
+////                        "else if () {\n" +
+////                            " j+=1;" +
+////                            " continue;" +
+////                        "}" +
+//                    "}" +
+//                    "if (maliciousClass == null){" +
+//                        " System.out.println(\"maliciousClass is NULL\"); " +
+//                    "}" +
+//
+//                    "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
+//                    "String propertyName = \"MAL_\" + maliciousClass + \"_\" + System.currentTimeMillis();" +
+//                    "java.lang.System.setProperty(propertyName, \"\"+ maliciousClass); " +
+//                    "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + System.getProperty(propertyName)); " +
+//                    "System.out.println(\"Array: \" + convertArray($args)); " +
+//                    "System.out.println(\"END OF PROBE INJECT CODE\"); " +
+//                "} catch (Exception e) { " +
+//                    "e.printStackTrace();" +
+//                "} " +
+//                "}";
+//    }
+private static String generateInsertedCode() {
+    return "{ " +
+            "try { " +
+            "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
 //                "System.out.println(Thread.currentThread().getContextClassLoader());" +
 
-                "System.out.println(\"Stack trace: \"); " +
-                "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
-                "StackTraceElement maliciousClass = null;" +
-                "for (int i = 2; i < stackTrace.length; i++) {" +
-                "StackTraceElement currentElement = stackTrace[i];" +
-                "String currentClassName = currentElement.getClassName();" +
-
-                // Check if the current element is a JSP-generated class
-                "if (isGeneratedJspClass(currentClassName)) {" +
-                "System.out.println(\"JSP-generated method (potential malicious upload): \" + currentElement.getClassName() + \".\" + currentElement.getMethodName());" +
-                "maliciousClass = currentElement.getClassName();" +
-                "break;" +
-                "}" +
-
-                // If not Java core, keep checking until finding a framework class, set the developer class
-                "if (i + 1 < stackTrace.length && !isFrameworkClass(stackTrace[i + 1].getClassName())) {" +
-                // Continue until finding a framework class
-                "int j = i;" +
-                "while (j < stackTrace.length && !isFrameworkClass(stackTrace[j].getClassName())) {" +
-                "j++;" +
-                "}" +
-                // Set the developer class as the current position - 1 and the previous one is malicious
-                "if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName())) {" +
-                "System.out.println(\"Closest developer method: \" + stackTrace[j - 2].getClassName() + \".\" + stackTrace[j - 2].getMethodName());" +
-                "maliciousClass = stackTrace[j - 2].getClassName();" +
-                "}" +
-                "else if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName()) && !isFrameworkClass(stackTrace[j+1].getClassName())) {\n" +
-                " j+=1;" +
-                " continue;" +
-                "}" +
-                "}" +
-                "}" +
-                "    System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
-                "String propertyName = \"MAL_\" + maliciousClass + \"_\" + System.currentTimeMillis();" +
-                "    java.lang.System.setProperty(propertyName, \"\"+ maliciousClass); " +
-                "    System.out.println(\"Set system property successfully: \" + propertyName + \":\" + System.getProperty(propertyName)); " +
-                "    System.out.println(\"Array: \" + convertArray($args)); " +
-                "    System.out.println(\"END OF PROBE INJECT CODE\"); " +
-                "} catch (Exception e) { " +
-                "    e.printStackTrace();" +
-                "} " +
-                "}";
-
-        //        String insertedCode = "{ " +
-////                "try {" +
-////                "System.setOut(new java.io.PrintStream(new java.io.FileOutputStream(\"D:\\\\Download\\\\output.log\", true))); "
-//                "System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
-////                "ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();" +
-////                "System.out.println(\"Classloader: \" + ProcessBuilder.class.getClassLoader().getName());" +
-////                "System.out.println(\"Context class loader:  \" + contextLoader);" +
-//                "System.setProperty(\"testing\",\"HelloWorld\");" +
-//                "System.out.println(\"Set system property successfully: \" + System.getProperty(\"testing\") );" +
-//
-////                "System.out.println(\"Stack trace: \"); " +
-////                "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
-////                "for (int i = 0; i < stackTrace.length; i++) { " +
-////                "    System.out.println(stackTrace[i]);" +
-////                "}" +
-////                "System.out.println(\"This message is writt   en to output.log without imports.\");" +
-////                "} catch (Exception e) {" +
-////                "e.printStackTrace();" +
-////                "}" +
-////                "boolean addSuccess = org.example.MemoryTransformer.addStackTrace(stackTrace);"+
-////                "if (addSuccess) {" +
-////                "System.out.println(\"Stack trace added successfully.\");" +
-////                "} else {" +
-////                "System.out.println(\"Failed to add stack trace.\");}" +
-//
-//                "System.out.println(\"END OF PROBE INJECT CODE\"); " +
-//                "}";
-
-    }
-
+            "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
+            "System.out.println(\"Stack trace: \"); " +
+//            "for (int i = 0; i < stackTrace.length; i++) {" +
+//            "StackTraceElement currentElement = stackTrace[i];" +
+//            "String currentClassName = currentElement.getClassName();" +
+//            "System.out.println(currentElement);" +
+//            "}"+
+            "StackTraceElement maliciousClass = stackTrace[2];" +
+            "String result = maliciousClass.getClassName();"+
+                "if (!isFrameworkClass(maliciousClass.getClassName()) && !isGeneratedJspClass(maliciousClass.getClassName()) && !isFrameworkClass(stackTrace[3].getClassName())) {"+
+                    "result += \",\";"+
+                    "int i = 3;"+
+                    "while (i < stackTrace.length && !isFrameworkClass(stackTrace[i].getClassName())) {"+
+                    "result += stackTrace[i].getClassName() + \",\";"+
+                    "i++;"+
+                    "}"+
+                "}"+
+            "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
+            "String propertyName = \"MAL__\" + result + \"__\" + System.currentTimeMillis();" +
+            "java.lang.System.setProperty(propertyName, convertArray($args)); " +
+            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
+            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
+            "} catch (Exception e) { " +
+            "e.printStackTrace();" +
+            "} " +
+            "}";
+}
     private static List<String> getTargetMethodList(String targetMethodName) {
         List<String> targetMethodList = new ArrayList<>();
         if (targetMethodName.contains("[") && targetMethodName.contains(",")) {

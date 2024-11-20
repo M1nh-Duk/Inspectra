@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.util.List;
 
 import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.systemClassPool;
+import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
+import static org.IAP491G3.Agent.Loader.Contraints.OS_VERSION;
 
 
 public class ClassUtils {
@@ -26,8 +28,8 @@ public class ClassUtils {
                     System.out.println("Retransform class successfully, Class: " + clazz.getName());
 
                 } catch (Throwable e) {
-                    System.out.println("====================\nRetransform error: "+e.getMessage());
-                    System.out.println("Cause: "+e.getCause());
+                    System.out.println("====================\nRetransform error: " + e.getMessage());
+                    System.out.println("Cause: " + e.getCause());
                     System.out.println("retransformClasses class error, name: " + clazz.getName());
                 }
             }
@@ -53,6 +55,7 @@ public class ClassUtils {
         }
         return null;
     }
+
     public static Class<?> getLoadedClassObjByFullPath(Instrumentation inst, String className) {
         className = className.toLowerCase();
         Class<?>[] loadedClasses = inst.getAllLoadedClasses();
@@ -77,11 +80,12 @@ public class ClassUtils {
 
         return false;
     }
-    public static void saveBytecodeToFile(CtClass ctClass, String className) throws IOException {
-        String filePath = "D:\\Download\\testProject\\Inspectra_JDK8\\Inspectra\\out\\" + className.replace('.', '_') + ".class";
-        File outputFile = new File(filePath);
-        outputFile.getParentFile().mkdirs();
 
+    public static void saveBytecodeToFile(CtClass ctClass, String className) throws IOException {
+        className = className.substring(className.lastIndexOf(".") + 1);
+        String filePath = (OS_VERSION.toLowerCase().contains("window")) ? DUMP_DIR + "\\" + className.replace('.', '_') + ".class" :
+                DUMP_DIR + "/" + className.replace('.', '_') + ".class";
+        File outputFile = new File(filePath);
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             fos.write(ctClass.toBytecode());
             ctClass.detach();
@@ -90,6 +94,7 @@ public class ClassUtils {
             throw new RuntimeException(e);
         }
     }
+
     public static byte[] readByteCodeFromPath(String path) throws IOException {
         File classFile = new File(path);
         if (classFile.exists()) {
@@ -104,6 +109,7 @@ public class ClassUtils {
 
         return null; // Return null if the file does not exist or an error occurs
     }
+
     public static void dumpClass(Instrumentation inst, String className) throws NotFoundException, IOException {
         ClassPool classPool = systemClassPool.get(0);
         Class<?> classObj = getLoadedClassObjByFullPath(inst, className);
@@ -115,4 +121,4 @@ public class ClassUtils {
 
     }
 
-    }
+}

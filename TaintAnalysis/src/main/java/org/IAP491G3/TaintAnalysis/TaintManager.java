@@ -220,10 +220,10 @@ public class TaintManager extends IFDSSetUp {
 //            e.printStackTrace();
 //        }
 //    }
-    public void taint(Class<?> clazz) {
+    public void taint(String className, ArrayList<String> userDefinedFolders) {
         System.out.println("================ TAINT METHOD EXECUTED !!!");
-        System.out.println("Taint method received: " + clazz.getName());
-        JimpleIFDSSolver<?, ? extends InterproceduralCFG<Unit, SootMethod>> analysis = executeStaticAnalysis(clazz.getName());
+        System.out.println("Taint method received: " + className);
+        JimpleIFDSSolver<?, ? extends InterproceduralCFG<Unit, SootMethod>> analysis = executeStaticAnalysis(className,userDefinedFolders);
         Set<String> defaultIDEResult = getResult(analysis);
 
     }

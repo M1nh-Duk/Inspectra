@@ -2,14 +2,14 @@ package org.IAP491G3.Agent.AgentCore;
 
 import javassist.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.*;
 
 import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.suspiciousClassAndMethod;
-import static org.IAP491G3.Agent.Loader.Contraints.JSP_FOLDER;
-import static org.IAP491G3.Agent.Loader.Contraints.OS_VERSION;
+import static org.IAP491G3.Agent.Loader.Contraints.*;
 import static org.IAP491G3.Agent.Utils.ClassUtils.*;
 import static org.IAP491G3.Agent.Utils.ClassUtils.getLoadedClassObjByCLassName;
 import static org.IAP491G3.Agent.Utils.InstrumentationUtils.invokeAgentCacheMethodWithCast;
@@ -33,7 +33,7 @@ public class Worker {
 //            System.out.println("11AgentCache class: " + agentCache.getClass().getName());
 //            System.out.println("Worker classloader is " + Worker.class.getClassLoader());
             workerAgentCache = agentCache;
-
+            createDumpFolder();
             handleLoadedClasses(inst);
             System.out.println("=========> Handled loaded class successfully !");
             System.out.println("========================= ADDING TRANSFORMER ==============");
@@ -131,15 +131,8 @@ public class Worker {
                         String value = entry.getValue().toString();
                         System.out.println("======================================= FOUND MAL CLASS2");
                         System.out.println(key + " = " + value);
-                        Class<?> tempClass = null;
-                        String tempClassName = null;
-                        String[] parts = key.split("_");
-                        if (key.contains("_jsp")) {
-                            tempClassName = parts[1] + "_" + parts[2] + "_" + parts[3];  // MAL_org.apache.jsp.uploads._2addservlet_jsp_1731963948572
-                        } else {
-                            tempClassName = parts[1];                   // MAL_org.example.NormalServlet_1731963948572
-
-                        }
+//                        Class<?> tempClass = null;
+                        String tempClassName = key.split("__")[1];
 //                                tempClass = getJspClass(inst, key);
 //                                System.out.println("GOT CLASS: " + tempClass.getName());
 //                            }
@@ -155,21 +148,43 @@ public class Worker {
 //                        System.out.println("Extracted className = " + className);
 
 //                            tempClass = Class.forName(key);
-
-                            if (tempClassName.contains("$")){
-                                tempClassName= tempClassName.substring(0,tempClassName.indexOf("$"));
+                        ArrayList<String> highlyMaliciousClass = new ArrayList<String>();
+                        if (tempClassName.contains(",")) {
+                            for (String item : tempClassName.split(",")) {
+                                highlyMaliciousClass.add(item.trim());
                             }
-//                        dumpClass(inst, tempClassName);
-                        System.out.println("Temp class Name: " + tempClassName);
-                        tempClass = getLoadedClassObjByCLassName(inst, tempClassName);
-                        System.out.println("FOUND CLASS OBJECT FOR: "+tempClass.getName());
-                        taintManager.taint(tempClass);
-//                        dumpClass(inst, className);
+                        } else {
+                            highlyMaliciousClass.add(tempClassName);
+                        }
+                        for (String className : highlyMaliciousClass) {
+                            boolean classIsJSP = false;
+                            if (className.contains("_jsp")) {
+//                                className = className.substring(className.indexOf("_"));
+                                className = className.substring(className.lastIndexOf("."));
+                                classIsJSP = true;
+//                                continue;
+                            }
+                            if (className.contains("$")) {
+                                className = className.substring(0, className.indexOf("$"));
+                            }
+                            System.out.println("Temp class Name: " + className);
+//                            tempClass = getLoadedClassObjByCLassName(inst, className);
+                            if (!classIsJSP) {
+                                dumpClass(inst, className);
+                            }
+                            if (className.toLowerCase().contains("standardcontext")) {
+                                continue;
+                            }
+                            className = className.substring(className.lastIndexOf(".") + 1);
+                            System.out.println("FOUND CLASS OBJECT FOR: " + className);
+                            taintManager.taint(className, new ArrayList<>(Arrays.asList(JSP_FOLDER, DUMP_DIR)));
+                        }
+
                         System.clearProperty(key);
 
                     }
                 }
-                properties = null;
+                properties = null;   // Dereference the copied properties object to get a new one in the next iteration
                 Thread.sleep(1000);  // Replace with actual wait logic if applicable
 
 
@@ -188,7 +203,17 @@ public class Worker {
     }
 
 
-
+    public static void createDumpFolder() {
+        File dumpDir = new File(DUMP_DIR);
+        if (!dumpDir.exists()) {
+            boolean created = dumpDir.mkdirs();
+            if (created) {
+                System.out.println("Dump folder created at: " + DUMP_DIR);
+            } else {
+                System.out.println("Failed to create dump folder at: " + DUMP_DIR);
+            }
+        }
+    }
 
     public static void printLoadedClass(Instrumentation inst) {
         System.out.println("All loaded classes: ");
