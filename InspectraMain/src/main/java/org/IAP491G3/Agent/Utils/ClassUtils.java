@@ -9,34 +9,16 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.*;
 
+import org.benf.cfr.reader.api.CfrDriver;
+import org.benf.cfr.reader.api.OutputSinkFactory;
 import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.systemClassPool;
-import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
-import static org.IAP491G3.Agent.Loader.Contraints.OS_VERSION;
+import static org.IAP491G3.Agent.Utils.StringUtils.getOutputPath;
 
 
 public class ClassUtils {
-    public static void retransformClasses(Instrumentation inst, ClassFileTransformer transformer,
-                                          List<Class<?>> classes) {
-        try {
-            inst.addTransformer(transformer, true);
 
-            for (Class<?> clazz : classes) {
-                try {
-                    inst.retransformClasses(clazz);
-                    System.out.println("Retransform class successfully, Class: " + clazz.getName());
-
-                } catch (Throwable e) {
-                    System.out.println("====================\nRetransform error: " + e.getMessage());
-                    System.out.println("Cause: " + e.getCause());
-                    System.out.println("retransformClasses class error, name: " + clazz.getName());
-                }
-            }
-        } finally {
-            inst.removeTransformer(transformer);
-        }
-    }
 
     /*
  Ex:    Full path: org.apache.tomcat.util.descriptor.web.FilterDef
@@ -81,11 +63,9 @@ public class ClassUtils {
         return false;
     }
 
-    public static void saveBytecodeToFile(CtClass ctClass, String className) throws IOException {
-        className = className.substring(className.lastIndexOf(".") + 1);
-        String filePath = (OS_VERSION.toLowerCase().contains("window")) ? DUMP_DIR + "\\" + className.replace('.', '_') + ".class" :
-                DUMP_DIR + "/" + className.replace('.', '_') + ".class";
-        File outputFile = new File(filePath);
+    public static void saveBytecodeToFile(CtClass ctClass, String className, String folder) throws IOException {
+        String outputPath = getOutputPath(className,folder);
+        File outputFile = new File(outputPath);
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             fos.write(ctClass.toBytecode());
             ctClass.detach();
@@ -110,15 +90,59 @@ public class ClassUtils {
         return null; // Return null if the file does not exist or an error occurs
     }
 
-    public static void dumpClass(Instrumentation inst, String className) throws NotFoundException, IOException {
+    public static void dumpClass(Instrumentation inst, String className, String folder) throws NotFoundException, IOException {
         ClassPool classPool = systemClassPool.get(0);
         Class<?> classObj = getLoadedClassObjByFullPath(inst, className);
 //        System.out.println("classObj test: " + classObj.getName());
         classPool.insertClassPath(new ClassClassPath(classObj));
+        System.out.println("dumpClass ClassNAme: " + className);
         CtClass ctClass = classPool.get(className);
         System.out.println("Get successfully: " + ctClass.getName());
-        saveBytecodeToFile(ctClass, className);
+        saveBytecodeToFile(ctClass, className,folder);
+    }
 
+    public static String decompileClass(String classFilePath, String methodName, boolean hideUnicode) {
+        final StringBuilder result = new StringBuilder(8192);
+
+        OutputSinkFactory mySink = new OutputSinkFactory() {
+            @Override
+            public List<SinkClass> getSupportedSinks(SinkType sinkType, Collection<SinkClass> collection) {
+                return Arrays.asList(SinkClass.STRING, SinkClass.DECOMPILED, SinkClass.DECOMPILED_MULTIVER,
+                        SinkClass.EXCEPTION_MESSAGE);
+            }
+
+            @Override
+            public <T> Sink<T> getSink(final SinkType sinkType, SinkClass sinkClass) {
+                return new Sink<T>() {
+                    @Override
+                    public void write(T sinkable) {
+                        // skip message like: Analysing type demo.MathGame
+                        if (sinkType == SinkType.PROGRESS) {
+                            return;
+                        }
+                        result.append(sinkable);
+                    }
+                };
+            }
+        };
+
+        HashMap<String, String> options = new HashMap<String, String>();
+        /**
+         * @see org.benf.cfr.reader.util.MiscConstants.Version.getVersion() Currently,
+         *      the cfr version is wrong. so disable show cfr version.
+         */
+        options.put("showversion", "false");
+        options.put("hideutf", String.valueOf(hideUnicode));
+        if (!StringUtils.isBlank(methodName)) {
+            options.put("methodname", methodName);
+        }
+
+        CfrDriver driver = new CfrDriver.Builder().withOptions(options).withOutputSink(mySink).build();
+        List<String> toAnalyse = new ArrayList<String>();
+        toAnalyse.add(classFilePath);
+        driver.analyse(toAnalyse);
+
+        return result.toString();
     }
 
 }

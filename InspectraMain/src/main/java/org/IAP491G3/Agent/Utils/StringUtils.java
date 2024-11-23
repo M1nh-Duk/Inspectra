@@ -3,8 +3,8 @@ package org.IAP491G3.Agent.Utils;
 
 import java.util.Map;
 
-import static org.IAP491G3.Agent.Loader.Contraints.AGENT_LOADER_FILE_NAME;
-import static org.IAP491G3.Agent.Loader.Contraints.AGENT_NAME;
+import static org.IAP491G3.Agent.Loader.Contraints.*;
+import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
 
 public class StringUtils {
     public static String toLowerCase(String str) {
@@ -39,7 +39,34 @@ public class StringUtils {
         System.out.println("\n" + banner + "\n[ " + AGENT_NAME + " v1.0.0 ] by ka1t0_k1d\n");
     }
 
+    public static boolean isBlank(final CharSequence cs) {
+        int strLen;
+        if (cs == null || (strLen = cs.length()) == 0) {
+            return true;
+        }
+        for (int i = 0; i < strLen; i++) {
+            if (Character.isWhitespace(cs.charAt(i)) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+public static String getOutputPath(String className,String folder){
+    className = className.substring(className.lastIndexOf(".") + 1);
+    return (OS_VERSION.toLowerCase().contains("window")) ? folder + "\\" + className.replace('.', '_') + ".class" :
+            folder + "/" + className.replace('.', '_') + ".class";
+}
 
+public static String removeCommentOfDecompileClass(String classContent) {
+    // Define the regex pattern to match the block comment
+    String regexPattern = "/\\*.*?\\*/";
+
+    // Remove the block comment using replaceAll
+    String cleanedContent = classContent.replaceAll("(?s)" + regexPattern, "");
+
+    // Print the cleaned content
+    return(cleanedContent);
+}
     public static String getBanner() {
         return "\n" +
                 "  _____        _____                 _             \n" +

@@ -29,8 +29,6 @@ public class CustomClassLoader extends URLClassLoader {
     public CustomClassLoader(final URL url, final ClassLoader classLoader) {
         super(new URL[]{url}, classLoader);
 
-        System.out.println("URL for Custom Loader: " + url.toString());
-
     }
 
 

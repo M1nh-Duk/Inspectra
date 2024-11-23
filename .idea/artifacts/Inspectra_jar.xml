@@ -60,6 +60,7 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/functionaljava/functionaljava/4.2/functionaljava-4.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/benf/cfr/0.152/cfr-0.152.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

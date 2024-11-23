@@ -17,6 +17,7 @@ public class MemoryTransformer implements ClassFileTransformer {
         put("AbstractUrlHandlerMapping", "registerHandler");
         put("java.lang.Field", "get");
         put("FilterDef", "setFilterName");
+//        put("URLClassLoader", "defineClass");
         put("StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
 //        put("Testing", "runCal");
 //        put("ProcessBuilder", "start");
@@ -42,6 +43,7 @@ public class MemoryTransformer implements ClassFileTransformer {
 //        System.out.println("==================\nTRansformer executed");
 //        System.out.println("ClassName: " + className);
 //        System.out.println("Classloader: " + loader);
+
         String onlyClassName = className.substring(className.lastIndexOf("/") + 1);
         for (String malClassName : suspiciousClassAndMethod.keySet()) {
             if (onlyClassName.equals(malClassName)) {
@@ -247,16 +249,6 @@ private static String generateInsertedCode() {
         return targetMethodList;
     }
 
-    public static void addStackTrace(StackTraceElement[] stackTrace) {
-        System.out.println("Add Stack trace executed ");
-//        if (stackTrace.length > 2) { // To avoid self-calls
-//            for (StackTraceElement s : stackTrace) {
-//                System.out.println("Caller: " + s.getClassName() + "." + s.getMethodName());
-//            }
-        StackTraceElement caller = stackTrace[2];
-        System.out.println("Caller: " + caller.getClassName() + "." + caller.getMethodName());
-//            dumpCallerClass(caller.getClassName());
-//        }
-    }
+
 
 }

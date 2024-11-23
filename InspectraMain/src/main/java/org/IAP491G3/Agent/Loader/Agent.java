@@ -3,10 +3,13 @@ package org.IAP491G3.Agent.Loader;
 
 import org.IAP491G3.Agent.Utils.StringUtils;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -144,6 +147,27 @@ public class Agent {
 
 
 //        synchronized (Agent.class) {
+        try {
+            // Obtain the MBean server
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+            // Query for all StandardContext objects
+            Set<ObjectName> contexts = mbs.queryNames(new ObjectName("Catalina:type=Context,*"), null);
+
+            for (ObjectName context : contexts) {
+                // Perform operations with the StandardContext
+                String contextPath = context.getKeyProperty("path");
+                System.out.println("Found context with path: " + contextPath);
+
+                // You can cast here if you are sure of the context type
+                // StandardContext standardContext = (StandardContext) someMethodToGetStandardContext();
+
+                // Example: Do something with the context
+                // ...
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         try {
             System.out.println("Initiating agent...");
             if (customClassLoader == null) {

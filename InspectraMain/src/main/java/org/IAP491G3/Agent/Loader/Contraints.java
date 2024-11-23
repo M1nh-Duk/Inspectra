@@ -16,6 +16,7 @@ public class Contraints {
     public static final String JSP_FOLDER = "C:\\Users\\Minh Duc\\.SmartTomcat\\TomcatJDK8\\TomcatJDK8\\work\\Catalina\\localhost\\TomcatJDK8\\org\\apache\\jsp\\uploads";
     public static final String OS_VERSION = System.getProperty("os.name");
     public static final String DUMP_DIR = System.getProperty("user.dir") + File.separator + "dump";;
+    public static final boolean AUTO_DELETE = true;
 
 
 

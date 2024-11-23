@@ -1,6 +1,9 @@
 package org.IAP491G3.Agent.Utils;
 
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
+import java.util.List;
 
 public class InstrumentationUtils {
     public static Object invokeAgentCacheMethod(Object AGENT_CACHE, String methodName, Boolean hasArgument, Object... args) throws Exception {
@@ -76,5 +79,34 @@ public class InstrumentationUtils {
         throw new ClassCastException("Cannot cast " + result.getClass() + " to " + returnType);
     }
 
+    public static void retransformClasses(Instrumentation inst, ClassFileTransformer transformer,
+                                          List<Class<?>> classes) {
+        try {
+            inst.addTransformer(transformer, true);
 
-}
+            for (Class<?> clazz : classes) {
+                try {
+                    inst.retransformClasses(clazz);
+                    System.out.println("Retransform class successfully, Class: " + clazz.getName());
+
+                } catch (Throwable e) {
+                    System.out.println("====================\nRetransform error: " + e.getMessage());
+                    System.out.println("Cause: " + e.getCause());
+                    System.out.println("retransformClasses class error, name: " + clazz.getName());
+                }
+            }
+        } finally {
+            inst.removeTransformer(transformer);
+        }
+    }
+    public static boolean isClassAlreadyTransformed(Class<?> clazz) {
+        try {
+            // Check if the class has the marker field
+            clazz.getDeclaredField("__TRANSFORMED_BY_AGENT");
+            return true;  // Marker exists, the class has been transformed
+        } catch (NoSuchFieldException e) {
+            return false;  // Marker doesn't exist, class needs transformation
+        }
+    }
+
+    }
