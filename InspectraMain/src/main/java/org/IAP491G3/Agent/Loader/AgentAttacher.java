@@ -2,6 +2,8 @@ package org.IAP491G3.Agent.Loader;
 
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
+import org.IAP491G3.Agent.Utils.LogUtils;
+import org.IAP491G3.Agent.Utils.StringUtils;
 
 import java.io.File;
 import java.net.URL;
@@ -9,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentJarPath;
 import static org.IAP491G3.Agent.Utils.StringUtils.printProcessList;
 import static org.IAP491G3.Agent.Utils.StringUtils.printUsage;
 
@@ -25,11 +28,11 @@ public class AgentAttacher {
         try {
             Object vm = vmLoader.attach(processId);
 //            System.out.println("loaderFileUrl.toURI()).getAbsolutePath(): ");
-            vmLoader.loadAgent(vm, new File(getAgentFileUrl().toURI()).getAbsolutePath(), args);
+//            vmLoader.loadAgent(vm, new File(getAgentFileUrl().toURI()).getAbsolutePath(), args);
+            vmLoader.loadAgent(vm, getCurrentJarPath(), args);
             vmLoader.detach(vm);
         } catch (Exception e) {
-            System.out.println("Attach To JVM Exception: " + e);
-            e.printStackTrace();
+            StringUtils.printAndLogErr(e);
         }
     }
 
@@ -79,7 +82,7 @@ public class AgentAttacher {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Load JVM PID Exception:" + e);
+            System.err.println("Load JVM PID Exception:" + e);
             e.printStackTrace();
         }
         return "";

@@ -2,6 +2,7 @@ package org.IAP491G3.Agent.Utils;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class InstrumentationUtils {
             throw new NoSuchMethodException("Method " + methodName + " not found in AgentCache");
         }
 
-        System.out.println("Found method: " + method);
+//        System.out.println("Found method: " + method);
         method.setAccessible(true);
         if (hasArgument) {
             return method.invoke(AGENT_CACHE, args);
@@ -60,7 +61,7 @@ public class InstrumentationUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T invokeAgentCacheMethodWithCast(Object AGENT_CACHE, String methodName, Class<T> returnType, Boolean hasArgument, Object... args) throws Exception {
-        System.out.println("Attempting to invoke method: " + methodName);
+//        System.out.println("Attempting to invoke method: " + methodName);
 //        System.out.println("AGENT_CACHE is " + (AGENT_CACHE == null ? "null" : "not null"));
 
         if (AGENT_CACHE == null) {
@@ -68,7 +69,7 @@ public class InstrumentationUtils {
         }
 
         Object result = invokeAgentCacheMethod(AGENT_CACHE, methodName, hasArgument, args);
-        System.out.println("Method " + methodName + " returned: " + (result == null ? "null" : result.toString()));
+//        System.out.println("Method " + methodName + " returned: " + (result == null ? "null" : result.toString()));
 
         if (result == null) {
             return null;
@@ -80,24 +81,17 @@ public class InstrumentationUtils {
     }
 
     public static void retransformClasses(Instrumentation inst, ClassFileTransformer transformer,
-                                          List<Class<?>> classes) {
-        try {
-            inst.addTransformer(transformer, true);
+                                          List<Class<?>> classes) throws UnmodifiableClassException {
 
-            for (Class<?> clazz : classes) {
-                try {
+                inst.addTransformer(transformer, true);
+                for (Class<?> clazz : classes) {
                     inst.retransformClasses(clazz);
-                    System.out.println("Retransform class successfully, Class: " + clazz.getName());
-
-                } catch (Throwable e) {
-                    System.out.println("====================\nRetransform error: " + e.getMessage());
-                    System.out.println("Cause: " + e.getCause());
-                    System.out.println("retransformClasses class error, name: " + clazz.getName());
+//                    System.out.println("Retransform class successfully, Class: " + clazz.getName());
                 }
-            }
-        } finally {
-            inst.removeTransformer(transformer);
-        }
+                inst.removeTransformer(transformer);
+
+
+
     }
     public static boolean isClassAlreadyTransformed(Class<?> clazz) {
         try {

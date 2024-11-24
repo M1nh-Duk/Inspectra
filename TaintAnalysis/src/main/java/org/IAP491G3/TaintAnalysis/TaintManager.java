@@ -84,35 +84,35 @@ public class TaintManager extends IFDSSetUp {
         List<SootMethodRef> sources = new ArrayList<>();
         List<SootMethodRef> sinks = new ArrayList<>();
 
-        SootClass handlerMethodMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping");
-        SootMethodRef registerMapping = new SootMethodRefImpl(handlerMethodMappingClass, "registerMapping", Collections.emptyList(), VoidType.v(), false);
-        sources.add(registerMapping);
+//        SootClass handlerMethodMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping");
+//        SootMethodRef registerMapping = new SootMethodRefImpl(handlerMethodMappingClass, "registerMapping", Collections.emptyList(), VoidType.v(), false);
+//        sources.add(registerMapping);
 
         SootClass servletRequestClass = Scene.v().getSootClass("javax.servlet.http.HttpServletRequest");
         SootMethodRef getParameter = new SootMethodRefImpl(servletRequestClass, "getParameter", Collections.singletonList(RefType.v("java.lang.String")), RefType.v("java.lang.String"), false);
         sources.add(getParameter);
 
         // AbstractUrlHandlerMapping: registerHandler
-        SootClass urlHandlerMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping");
-        SootMethodRef registerHandler = new SootMethodRefImpl(urlHandlerMappingClass, "registerHandler", Collections.emptyList(), VoidType.v(), false);
-        sources.add(registerHandler);
+//        SootClass urlHandlerMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping");
+//        SootMethodRef registerHandler = new SootMethodRefImpl(urlHandlerMappingClass, "registerHandler", Collections.emptyList(), VoidType.v(), false);
+//        sources.add(registerHandler);
 
         // Field: get
-        SootClass fieldClass = Scene.v().getSootClass("java.lang.reflect.Field");
-        SootMethodRef fieldGet = new SootMethodRefImpl(fieldClass, "get", Collections.singletonList(RefType.v("java.lang.Object")), RefType.v("java.lang.Object"), false);
-        sources.add(fieldGet);
+//        SootClass fieldClass = Scene.v().getSootClass("java.lang.reflect.Field");
+//        SootMethodRef fieldGet = new SootMethodRefImpl(fieldClass, "get", Collections.singletonList(RefType.v("java.lang.Object")), RefType.v("java.lang.Object"), false);
+//        sources.add(fieldGet);
 
         // FilterDef: setFilterName
-        SootClass filterDefClass = Scene.v().getSootClass("org.apache.tomcat.util.descriptor.web.FilterDef");
-        SootMethodRef setFilterName = new SootMethodRefImpl(filterDefClass, "setFilterName", Collections.singletonList(RefType.v("java.lang.String")), VoidType.v(), false);
-        sources.add(setFilterName);
+//        SootClass filterDefClass = Scene.v().getSootClass("org.apache.tomcat.util.descriptor.web.FilterDef");
+//        SootMethodRef setFilterName = new SootMethodRefImpl(filterDefClass, "setFilterName", Collections.singletonList(RefType.v("java.lang.String")), VoidType.v(), false);
+//        sources.add(setFilterName);
 
         // StandardContext: addApplicationEventListener, addServletMappingDecoded
-        SootClass standardContextClass = Scene.v().getSootClass("org.apache.catalina.core.StandardContext");
-        SootMethodRef addApplicationEventListener = new SootMethodRefImpl(standardContextClass, "addApplicationEventListener", Arrays.asList(RefType.v("java.util.EventListener")), VoidType.v(), false);
-        SootMethodRef addServletMappingDecoded = new SootMethodRefImpl(standardContextClass, "addServletMappingDecoded", Arrays.asList(RefType.v("java.lang.String"), RefType.v("java.lang.String")), VoidType.v(), false);
-        sources.add(addApplicationEventListener);
-        sources.add(addServletMappingDecoded);
+//        SootClass standardContextClass = Scene.v().getSootClass("org.apache.catalina.core.StandardContext");
+//        SootMethodRef addApplicationEventListener = new SootMethodRefImpl(standardContextClass, "addApplicationEventListener", Arrays.asList(RefType.v("java.util.EventListener")), VoidType.v(), false);
+//        SootMethodRef addServletMappingDecoded = new SootMethodRefImpl(standardContextClass, "addServletMappingDecoded", Arrays.asList(RefType.v("java.lang.String"), RefType.v("java.lang.String")), VoidType.v(), false);
+//        sources.add(addApplicationEventListener);
+//        sources.add(addServletMappingDecoded);
 
         SootClass processBuilderClass = Scene.v().getSootClass("java.lang.ProcessBuilder");
         SootMethodRef processBuilderStart = new SootMethodRefImpl(processBuilderClass, "start", Collections.emptyList(), RefType.v("java.lang.Process"), true);
@@ -173,25 +173,27 @@ public class TaintManager extends IFDSSetUp {
             }
 
             // Log method details and its statements
-            System.out.println("SootMethod: " + m.getSignature());
+//            System.out.println("SootMethod: " + m.getSignature());
             for (Unit unit : activeBody.getUnits()) {
                 String unitString = unit.toString();
-
+//                System.out.println("UNIT STRING: " + unitString);
                 // Check for sinks: ProcessBuilder.start, Runtime.exec (String), Runtime.exec (String[]), and Method.invoke
                 if (unitString.contains("java.lang.ProcessBuilder") && unitString.contains("start")) {
                     containsMaliciousIndicator = true;
-                    System.out.println("Potential malicious indicator found in statement (ProcessBuilder.start): " + unitString);
+//                    System.out.println("Potential malicious indicator found in statement (ProcessBuilder.start): " + unitString);
                 } else if (unitString.contains("java.lang.Runtime") && unitString.contains("exec")) {
                     if (unitString.contains("(java.lang.String)") || unitString.contains("(java.lang.String[])")) {
                         containsMaliciousIndicator = true;
-                        System.out.println("Potential malicious indicator found in statement (Runtime.exec): " + unitString);
+//                        System.out.println("Potential malicious indicator found in statement (Runtime.exec): " + unitString);
                     }
-                } else if (unitString.contains("java.lang.reflect.Method") && unitString.contains("invoke")) {
+                }
+                else if (unitString.contains("java.lang.reflect.Method") && unitString.contains("invoke")) {
                     containsMaliciousIndicator = true;
-                    System.out.println("Potential malicious indicator found in statement (Method.invoke): " + unitString);
-                } else if (unitString.contains("ClassLoader")) {
+//                    System.out.println("Potential malicious indicator found in statement (Method.invoke): " + unitString);
+                }
+                else if (unitString.contains("ClassLoader")) {
                     containsMaliciousIndicator = true;
-                    System.out.println("Potential malicious indicator found in statement (ClassLoader): " + unitString);
+//                    System.out.println("Potential malicious indicator found in statement (ClassLoader): " + unitString);
                 }
             }
 
@@ -209,20 +211,20 @@ public class TaintManager extends IFDSSetUp {
             }
         }
 
-        System.out.println("================ TAINT RESULT");
-        if (containsMaliciousIndicator) {
-            System.out.println("CLASS IS MALICIOUS");
-        } else {
-            System.out.println("CLASS IS NOT MALICIOUS");
-        }
-
-        System.out.print(result + "\n");
+//        System.out.println("================ TAINT RESULT");
+//        if (containsMaliciousIndicator) {
+//            System.out.println("CLASS IS MALICIOUS");
+//        } else {
+//            System.out.println("CLASS IS NOT MALICIOUS");
+//        }
+//
+//        System.out.print(result + "\n");
         return containsMaliciousIndicator;
     }
 //
 //    private boolean getRsult(Object analysis) {
 //        List<SootMethod> entryPoints = getEntryPointMethods(); // Get all entry points
-//        Set<String> result = new HashSet<>();
+//        Set<String> result = new HashSet<>();R
 //        if (entryPoints.isEmpty()){
 //            System.out.println("entryPoints is empty");
 //        }
@@ -276,7 +278,7 @@ public class TaintManager extends IFDSSetUp {
 
 
     public boolean taint(String className, ArrayList<String> userDefinedFolders) {
-        System.out.println("================ TAINT METHOD EXECUTED !!!");
+        System.out.println("TAINT METHOD EXECUTED !!!");
         System.out.println("Taint method received: " + className);
 //        AtomicReference<Set<String>> defaultIDEResult = new AtomicReference<>();
         AtomicBoolean check = new AtomicBoolean(false);

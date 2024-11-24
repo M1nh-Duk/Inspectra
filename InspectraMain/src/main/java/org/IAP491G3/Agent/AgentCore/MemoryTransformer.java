@@ -30,7 +30,7 @@ public class MemoryTransformer implements ClassFileTransformer {
 
     public void setAgentCache(AgentCache agentCache) {
         this.agentCache = agentCache;
-        System.out.println("Transformer agent cache: "+ this.agentCache);
+//        StringUtils.println("Transformer agent cache: "+ this.agentCache);
 
     }
 
@@ -54,7 +54,7 @@ public class MemoryTransformer implements ClassFileTransformer {
         if (isSuspiciousClass) {
             try {
 
-                System.out.println("Suspicious class: " + className);
+//                System.out.println("Suspicious class: " + className);
                 ClassPool.getDefault().insertClassPath(new ClassClassPath(classBeingRedefined));
                 ClassPool classPool = ClassPool.getDefault();
                 classPool.appendClassPath(new LoaderClassPath(ClassLoader.getSystemClassLoader()));
@@ -65,7 +65,7 @@ public class MemoryTransformer implements ClassFileTransformer {
 
                 systemClassPool.add(classPool);
                 String targetMethodName = suspiciousClassAndMethod.get(onlyClassName); // get the class only, not package
-                System.out.println("targetMethodName: " + targetMethodName);
+//                System.out.println("targetMethodName: " + targetMethodName);
 
                 return mainProbe(classPool, className, targetMethodName);
 
@@ -83,7 +83,7 @@ public class MemoryTransformer implements ClassFileTransformer {
             throw new IllegalArgumentException("ClassPool, targetClassName, and targetMethodName must not be null.");
         }
 
-        System.out.println("==================== Probe executed");
+//        System.out.println("==================== Probe executed");
         CtClass ctClazz;
         CtMethod ctMethod;
         String fullPathClassName = targetClassName.replace("/", ".");  // Remove the "/" in the className. Ex: org.IAP491G3.TaintAnalysis.Utils/StringUtils -> org.IAP491G3.TaintAnalysis.Utils.StringUtils;
@@ -94,7 +94,7 @@ public class MemoryTransformer implements ClassFileTransformer {
         List<String> targetMethodList = getTargetMethodList(targetMethodName); // Extracted method list creation
 
         try {
-            System.out.println("fullPathClassName: " + fullPathClassName);
+//            System.out.println("fullPathClassName: " + fullPathClassName);
             ctClazz = classPool.get(fullPathClassName);
             // =========================================================================
             CtMethod isFrameworkClassMethod = CtNewMethod.make(
@@ -129,7 +129,7 @@ public class MemoryTransformer implements ClassFileTransformer {
                 for (String methodName : targetMethodList) {
                     if (declaredMethod.getName().equals(methodName)) {
                         ctMethod = declaredMethod; // Use declaredMethod instead of re-fetch
-                        System.out.println("Injecting into CtClass: " + ctClazz.getName() + ", Method: " + ctMethod.getName());
+                        StringUtils.println("Injecting into CtClass: " + ctClazz.getName() + ", Method: " + ctMethod.getName());
                         ctMethod.insertAfter(insertedCode);
                     }
                 }
@@ -208,11 +208,11 @@ public class MemoryTransformer implements ClassFileTransformer {
 private static String generateInsertedCode() {
     return "{ " +
             "try { " +
-            "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
+//            "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
 //                "System.out.println(Thread.currentThread().getContextClassLoader());" +
 
             "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
-            "System.out.println(\"Stack trace: \"); " +
+//            "System.out.println(\"Stack trace: \"); " +
 //            "for (int i = 0; i < stackTrace.length; i++) {" +
 //            "StackTraceElement currentElement = stackTrace[i];" +
 //            "String currentClassName = currentElement.getClassName();" +
@@ -228,11 +228,11 @@ private static String generateInsertedCode() {
                     "i++;"+
                     "}"+
                 "}"+
-            "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
+//            "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
             "String propertyName = \"MAL__\" + result + \"__\" + System.currentTimeMillis();" +
             "java.lang.System.setProperty(propertyName, convertArray($args)); " +
-            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
-            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
+//            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
+//            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
             "} catch (Exception e) { " +
             "e.printStackTrace();" +
             "} " +

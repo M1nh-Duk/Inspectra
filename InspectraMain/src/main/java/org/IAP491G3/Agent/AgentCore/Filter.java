@@ -29,8 +29,7 @@ public class Filter {
     );
     // Define risky java sign new filter, listener, servlet, controller, interceptor
     static final List<String> signFilter = Arrays.asList(
-            "setFilterName(",
-//            "getDeclaredMethod(\"setFilterName",
+            "setFilterName",
             "addFilter("
     );
 
@@ -209,6 +208,7 @@ public class Filter {
     public static Map<String, List<String>> filterBlackList(String content, String className, Boolean checkComponent) {
         Scanner scanner = new Scanner(content);
 //        Pattern longStringPattern = Pattern.compile("\"([^\"]{100,})\"");
+
          riskScore=0;
         boolean riskFound = false;
         Map<String, List<String>> matchedRule = new HashMap<>();
@@ -305,8 +305,8 @@ public class Filter {
             scanner.close();
         }
         // Log the results
-        System.out.println("============================================================ FILTER RESULT");
-        System.out.println("Class: " + className + "|| Point: " +riskScore);
+//        System.out.println("============================================================ FILTER RESULT");
+//        System.out.println("Class: " + className + "|| Point: " +riskScore);
         matchedRule.get("RiskScore").add(String.valueOf(riskScore));
         matchedRule.get("ClassName").add(className);
         System.out.println("Analysis complete. Results written to log file.");

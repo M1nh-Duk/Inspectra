@@ -1,18 +1,19 @@
 package org.IAP491G3.Agent.Utils;
 
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.IAP491G3.Agent.Loader.Contraints.*;
 import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
+import static org.IAP491G3.Agent.Utils.LogUtils.getEventTime;
+import static org.IAP491G3.Agent.Utils.LogUtils.logit;
 
 public class StringUtils {
     public static String toLowerCase(String str) {
         return str.toLowerCase();
     }
-    public static void println(String str) {
-        System.out.println("[ " + AGENT_NAME + " ] " + str);
-    }
+
     public static void printUsage() {
         System.out.println(AGENT_NAME + " (Java Agent)");
         System.out.println("Usage: java -jar " + AGENT_LOADER_FILE_NAME + " [Options]");
@@ -25,6 +26,7 @@ public class StringUtils {
         System.out.println("\r\n");
         System.out.println("JVM PID List:");
     }
+
     public static String[] convertToStringArray(String str) {
         return str.replaceAll("[\\[\\]]", "").split(",\\s*");
     }
@@ -34,6 +36,7 @@ public class StringUtils {
             System.out.println("PID: " + entry.getKey() + " - Process Name: " + entry.getValue());
         }
     }
+
     public static void printLogo() {
         String banner = getBanner();
         System.out.println("\n" + banner + "\n[ " + AGENT_NAME + " v1.0.0 ] by ka1t0_k1d\n");
@@ -51,22 +54,14 @@ public class StringUtils {
         }
         return true;
     }
-public static String getOutputPath(String className,String folder){
-    className = className.substring(className.lastIndexOf(".") + 1);
-    return (OS_VERSION.toLowerCase().contains("window")) ? folder + "\\" + className.replace('.', '_') + ".class" :
-            folder + "/" + className.replace('.', '_') + ".class";
-}
 
-public static String removeCommentOfDecompileClass(String classContent) {
-    // Define the regex pattern to match the block comment
-    String regexPattern = "/\\*.*?\\*/";
+    public static String getOutputPath(String className, String folder) {
+        className = className.substring(className.lastIndexOf(".") + 1);
+        return (OS_VERSION.toLowerCase().contains("window")) ? folder + "\\" + className.replace('.', '_') + ".class" :
+                folder + "/" + className.replace('.', '_') + ".class";
+    }
 
-    // Remove the block comment using replaceAll
-    String cleanedContent = classContent.replaceAll("(?s)" + regexPattern, "");
 
-    // Print the cleaned content
-    return(cleanedContent);
-}
     public static String getBanner() {
         return "\n" +
                 "  _____        _____                 _             \n" +
@@ -82,6 +77,29 @@ public static String removeCommentOfDecompileClass(String classContent) {
     public static String extractClassName(String className) {
         int startIndex = className.indexOf("_") + 1; // Find the index of the first underscore and add 1
         int endIndex = className.lastIndexOf("_"); // Find the last underscore
-        return  className.substring(startIndex, endIndex);
+        return className.substring(startIndex, endIndex);
+    }
+
+    public static void println(String str) {
+        System.out.println("[" + AGENT_NAME + "]" + "[" + getEventTime() + "] " + str);
+    }
+    public static void printErr(String str) {
+        System.err.println("[" + AGENT_NAME + "]" + "[" + getEventTime() + "] " + str);
+    }
+    public static void printAndLog(String str) {
+        println(str);
+        logit(str);
+    }
+    public static void printAndLogErr(Exception e ) {
+        printErr("Exception occured: " + e.getMessage()+ "\nPlease find the error in log file for more information");
+        // Building a readable stack trace as a String
+        StringBuilder stackTraceBuilder = new StringBuilder();
+        Arrays.stream(e.getStackTrace()).forEach(element -> {
+            stackTraceBuilder.append(element.toString()).append("\n");
+        });
+
+        logit("Stacktrace:\n" + stackTraceBuilder.toString());
+
+
     }
 }
