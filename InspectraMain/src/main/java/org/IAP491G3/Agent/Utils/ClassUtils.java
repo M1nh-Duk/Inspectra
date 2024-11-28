@@ -14,6 +14,8 @@ import java.util.*;
 import org.benf.cfr.reader.api.CfrDriver;
 import org.benf.cfr.reader.api.OutputSinkFactory;
 import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.systemClassPool;
+import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
+import static org.IAP491G3.Agent.Utils.PathUtils.createDumpFolder;
 import static org.IAP491G3.Agent.Utils.StringUtils.getOutputPath;
 
 
@@ -30,7 +32,7 @@ public class ClassUtils {
         Class<?>[] loadedClasses = inst.getAllLoadedClasses();
         for (Class<?> clazz : loadedClasses) {
             String clazzNameFull = clazz.getName().toLowerCase();
-            if (clazzNameFull.endsWith(className) && !clazzNameFull.contains("$")) {
+            if (clazzNameFull.endsWith(className)) {
 //                System.out.println("Method getLoadedClassObj successfully, Class: " + clazz.getName());
                 return clazz;
             }
@@ -43,7 +45,7 @@ public class ClassUtils {
         Class<?>[] loadedClasses = inst.getAllLoadedClasses();
         for (Class<?> clazz : loadedClasses) {
             String clazzNameFull = clazz.getName().toLowerCase();
-            if (clazzNameFull.equals(className) && !clazzNameFull.contains("$")) {
+            if (clazzNameFull.equals(className)) {
                 System.out.println("Method getLoadedClassObj successfully, Class: " + clazz.getName());
                 return clazz;
             }
@@ -65,6 +67,7 @@ public class ClassUtils {
 
     public static void saveBytecodeToFile(CtClass ctClass, String className, String folder) throws IOException {
         String outputPath = getOutputPath(className,folder);
+        System.out.println("outputPath: " + outputPath);
         File outputFile = new File(outputPath);
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             fos.write(ctClass.toBytecode());
@@ -90,15 +93,17 @@ public class ClassUtils {
         return null; // Return null if the file does not exist or an error occurs
     }
 
-    public static void dumpClass(Instrumentation inst, String className, String folder) throws NotFoundException, IOException {
-        ClassPool classPool = systemClassPool.get(0);
+    public static void dumpClass(Instrumentation inst, String className) throws NotFoundException, IOException {
+        if (DUMP_DIR == null){
+            createDumpFolder();
+        }
+        System.out.println("DD: " + DUMP_DIR);
+        ClassPool classPool = systemClassPool;
         Class<?> classObj = getLoadedClassObjByFullPath(inst, className);
 //        System.out.println("classObj test: " + classObj.getName());
         classPool.insertClassPath(new ClassClassPath(classObj));
-        System.out.println("dumpClass ClassNAme: " + className);
         CtClass ctClass = classPool.get(className);
-        System.out.println("Get successfully: " + ctClass.getName());
-        saveBytecodeToFile(ctClass, className,folder);
+        saveBytecodeToFile(ctClass, className,DUMP_DIR);
     }
 
     public static String decompileClass(String classFilePath, String methodName, boolean hideUnicode) {

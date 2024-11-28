@@ -13,16 +13,15 @@ import static org.IAP491G3.Agent.Utils.InstrumentationUtils.invokeAgentCacheMeth
 
 public class MemoryTransformer implements ClassFileTransformer {
     public static final Map<String, String> suspiciousClassAndMethod = new HashMap<String, String>() {{
-        put("AbstractHandlerMethodMapping", "registerMapping");
-        put("AbstractUrlHandlerMapping", "registerHandler");
-        put("java.lang.Field", "get");
-        put("FilterDef", "setFilterName");
+        put("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping", "registerMapping");
+        put("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping", "registerHandler");
+        put("java.lang.Field", "getDeclaredField");
+        put("org.apache.tomcat.util.descriptor.web.FilterDef", "setFilterClass");
 //        put("URLClassLoader", "defineClass");
-        put("StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
-//        put("Testing", "runCal");
-//        put("ProcessBuilder", "start");
+        put("org.apache.catalina.core.StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
+        put("org.apache.catalina.core.StandardWrapper", "setServletClass");
     }};
-    public static List<ClassPool> systemClassPool = new ArrayList<>();
+    public static ClassPool systemClassPool;
     private AgentCache agentCache;
 
     public MemoryTransformer() {
@@ -30,7 +29,6 @@ public class MemoryTransformer implements ClassFileTransformer {
 
     public void setAgentCache(AgentCache agentCache) {
         this.agentCache = agentCache;
-//        StringUtils.println("Transformer agent cache: "+ this.agentCache);
 
     }
 
@@ -44,9 +42,10 @@ public class MemoryTransformer implements ClassFileTransformer {
 //        System.out.println("ClassName: " + className);
 //        System.out.println("Classloader: " + loader);
 
-        String onlyClassName = className.substring(className.lastIndexOf("/") + 1);
+//        String onlyClassName = className.substring(className.lastIndexOf("/") + 1);
+          String convertedClassName = className.replace("/","."); // Remove the "/" in the className. Ex: org.IAP491G3.TaintAnalysis.Utils/StringUtils -> org.IAP491G3.TaintAnalysis.Utils.StringUtils;
         for (String malClassName : suspiciousClassAndMethod.keySet()) {
-            if (onlyClassName.equals(malClassName)) {
+            if (convertedClassName.equals(malClassName)) {
                 isSuspiciousClass = true;
                 break;
             }
@@ -63,11 +62,11 @@ public class MemoryTransformer implements ClassFileTransformer {
                     classPool.appendClassPath(new LoaderClassPath(contextClassLoader));
                 }
 
-                systemClassPool.add(classPool);
-                String targetMethodName = suspiciousClassAndMethod.get(onlyClassName); // get the class only, not package
+                systemClassPool = classPool;
+                String targetMethodName = suspiciousClassAndMethod.get(convertedClassName); // get the class only, not package
 //                System.out.println("targetMethodName: " + targetMethodName);
 
-                return mainProbe(classPool, className, targetMethodName);
+                return mainProbe(classPool, convertedClassName, targetMethodName);
 
             } catch (Exception e) {
                 System.out.println("Exception in main probe: " + e.getMessage());
@@ -86,17 +85,16 @@ public class MemoryTransformer implements ClassFileTransformer {
 //        System.out.println("==================== Probe executed");
         CtClass ctClazz;
         CtMethod ctMethod;
-        String fullPathClassName = targetClassName.replace("/", ".");  // Remove the "/" in the className. Ex: org.IAP491G3.TaintAnalysis.Utils/StringUtils -> org.IAP491G3.TaintAnalysis.Utils.StringUtils;
         Set<String> transformedClass = invokeAgentCacheMethodWithCast(Worker.workerAgentCache, "getTransformedClass", Set.class, false);
-        transformedClass.add(fullPathClassName);
-        String insertedCode = generateInsertedCode(); // Extracted code injection
+        transformedClass.add(targetClassName);
 
         List<String> targetMethodList = getTargetMethodList(targetMethodName); // Extracted method list creation
 
         try {
 //            System.out.println("fullPathClassName: " + fullPathClassName);
-            ctClazz = classPool.get(fullPathClassName);
+            ctClazz = classPool.get(targetClassName);
             // =========================================================================
+            String methodModifier = (targetMethodName.equals("setServletClass")) ? "public" : "private";
             CtMethod isFrameworkClassMethod = CtNewMethod.make(
                     "private static boolean isFrameworkClass(String className) {" +
                             // Check if the class belongs to a known web framework or server package
@@ -117,7 +115,7 @@ public class MemoryTransformer implements ClassFileTransformer {
                             "for (int i = 0; i < array.length; i++) {" +
                             "sb.append(array[i] != null ? array[i].toString() : \"null\");" +
                             "if (i < array.length - 1) {" +
-                            "sb.append(\", \");" +
+                            "sb.append(\",\");" +
                             "}" +
                             "}" +
                             "sb.append(\"]\");" +
@@ -130,7 +128,7 @@ public class MemoryTransformer implements ClassFileTransformer {
                     if (declaredMethod.getName().equals(methodName)) {
                         ctMethod = declaredMethod; // Use declaredMethod instead of re-fetch
                         StringUtils.println("Injecting into CtClass: " + ctClazz.getName() + ", Method: " + ctMethod.getName());
-                        ctMethod.insertAfter(insertedCode);
+                        ctMethod.insertAfter(generateInsertedCode(ctMethod.getName()));
                     }
                 }
             }
@@ -139,73 +137,18 @@ public class MemoryTransformer implements ClassFileTransformer {
             ctClazz.detach();
             return byteCode;
         } catch (NotFoundException e) {
-            throw new RuntimeException("Failed to find the class: " + fullPathClassName, e);
+            throw new RuntimeException("Failed to find the class: " + targetClassName, e);
         } catch (CannotCompileException e) {
-            throw new RuntimeException("Cannot compile the modified class: " + fullPathClassName, e);
+            throw new RuntimeException("Cannot compile the modified class: " + targetClassName, e);
         } catch (IOException e) {
-            throw new RuntimeException("I/O error occurred while processing class: " + fullPathClassName, e);
+            throw new RuntimeException("I/O error occurred while processing class: " + targetClassName, e);
         }
     }
 
-//    private static String generateInsertedCode() {
-//        return "{ " +
-//                "try { " +
-//                "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
-////                "System.out.println(Thread.currentThread().getContextClassLoader());" +
-//
-//                    "System.out.println(\"Stack trace: \"); " +
-//                    "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
-//                    "StackTraceElement maliciousClass = null;" +
-//                    "for (int i = 2; i < stackTrace.length; i++) {" +
-//                        "StackTraceElement currentElement = stackTrace[i];" +
-//                        "String currentClassName = currentElement.getClassName();" +
-//                        "System.out.println(currentElement);" +
-//                        // Check if the current element is a JSP-generated class
-//                        "if (isGeneratedJspClass(currentClassName)) {" +
-//                            "System.out.println(\"JSP-generated method (potential malicious upload): \" + currentElement.getClassName() + \".\" + currentElement.getMethodName());" +
-//                            "maliciousClass = currentElement.getClassName();" +
-//                            "break;" +
-//                        "}" +
-//
-//                        // If current class is not Java core, keep checking until finding a framework class, set the developer class
-//                            // If the i +1 class is not framework class, jump into this if case
-//                        "if (i + 1 < stackTrace.length && !isFrameworkClass(stackTrace[i + 1].getClassName())) {" +
-//                            // Continue until finding a framework class
-//                            "int j = i;" +
-//                            "while (j < stackTrace.length && !isFrameworkClass(stackTrace[j].getClassName())) {" +
-//                                "j++;" +
-//                            "}" +
-//                            // Set the developer class as the current position - 1 and the previous one is malicious
-//                            "if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName())) {" +
-//                                "System.out.println(\"Closest developer method: \" + stackTrace[j - 2].getClassName() + \".\" + stackTrace[j - 2].getMethodName());" +
-//                                "maliciousClass = stackTrace[j - 2].getClassName();" +
-//                            "}" +
-//                            "else if (j < stackTrace.length && isFrameworkClass(stackTrace[j].getClassName()) && !isFrameworkClass(stackTrace[j+1].getClassName())) {\n" +
-//                                " j+=1;" +
-//                                " continue;" +
-//                            "}" +
-//                        "}" +
-////                        "else if () {\n" +
-////                            " j+=1;" +
-////                            " continue;" +
-////                        "}" +
-//                    "}" +
-//                    "if (maliciousClass == null){" +
-//                        " System.out.println(\"maliciousClass is NULL\"); " +
-//                    "}" +
-//
-//                    "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
-//                    "String propertyName = \"MAL_\" + maliciousClass + \"_\" + System.currentTimeMillis();" +
-//                    "java.lang.System.setProperty(propertyName, \"\"+ maliciousClass); " +
-//                    "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + System.getProperty(propertyName)); " +
-//                    "System.out.println(\"Array: \" + convertArray($args)); " +
-//                    "System.out.println(\"END OF PROBE INJECT CODE\"); " +
-//                "} catch (Exception e) { " +
-//                    "e.printStackTrace();" +
-//                "} " +
-//                "}";
-//    }
-private static String generateInsertedCode() {
+
+private static String generateInsertedCode(String methodName) {
+    String customCode = ((methodName.equals("setFilterClass") || methodName.equals("setServletClass"))) ?
+            "java.lang.System.setProperty(propertyName, $1);":"java.lang.System.setProperty(propertyName, \"\"+$1.getClass());";
     return "{ " +
             "try { " +
 //            "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
@@ -228,14 +171,18 @@ private static String generateInsertedCode() {
                     "i++;"+
                     "}"+
                 "}"+
+//            "System.out.println(\"THIS: \" + $0); " +
+//            "System.out.println(\"DETECTED $1 MALICIOUS OF PARAM: \" + $1.getClass()); " +
+//            "System.out.println(\"DETECTED MALICIOUS OF PARAM: \" + $1); " +
+
 //            "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
-            "String propertyName = \"MAL__\" + result + \"__\" + System.currentTimeMillis();" +
-            "java.lang.System.setProperty(propertyName, convertArray($args)); " +
+            "String propertyName = \"MAL__" + methodName + "__\" + result +\"__\" + System.currentTimeMillis();" +
+            customCode+
 //            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
 //            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
             "} catch (Exception e) { " +
             "e.printStackTrace();" +
-            "} " +
+                "} " +
             "}";
 }
     private static List<String> getTargetMethodList(String targetMethodName) {

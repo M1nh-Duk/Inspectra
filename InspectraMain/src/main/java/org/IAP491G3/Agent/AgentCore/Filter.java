@@ -9,9 +9,9 @@ public class Filter {
     static final int HIGH_SCORE = 3;
     static final int MEDIUM_SCORE = 2;
     static final int LOW_SCORE = 1;
-    static int  riskScore = 0;
     static final Pattern longStringPattern = Pattern.compile("=(.{100,});");
     static final List<String> riskPackage = Arrays.asList("net.rebeyond.", "com.metasploit.");
+    static int riskScore ;
     // Define risky java reflection
     static final List<String> riskReflection = Arrays.asList(
             ".getDeclaredMethod(",
@@ -48,9 +48,7 @@ public class Filter {
 
     static final List<String> signController = Arrays.asList(
             "registerMapping(",
-            "registerHandler(",
-            "register\".equals",
-            "getDeclaredMethod(\"registerHandler"
+            "registerHandler("
     );
 
     static final List<String> signInterceptor = Arrays.asList(
@@ -207,9 +205,10 @@ public class Filter {
     //=================================================================================
     public static Map<String, List<String>> filterBlackList(String content, String className, Boolean checkComponent) {
         Scanner scanner = new Scanner(content);
+         riskScore=0;
+
 //        Pattern longStringPattern = Pattern.compile("\"([^\"]{100,})\"");
 
-         riskScore=0;
         boolean riskFound = false;
         Map<String, List<String>> matchedRule = new HashMap<>();
         matchedRule.put("Package", new ArrayList<>());

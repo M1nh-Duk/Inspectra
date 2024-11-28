@@ -77,8 +77,8 @@ public class CustomClassLoader extends URLClassLoader {
     @Override
     protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 //        System.out.println("CustomLoader Attempting to load class: " + name);
-        if (name.startsWith("org.apache.log4j")) {
-            return getParent().getParent().loadClass(name);
+        if (name.startsWith("org.apache.log4j") || name.matches(JAVA_INTERNAL_PACKAGES)) {
+            return super.loadClass(name, resolve);
         }
 
         final Class<?> loadedClass = findLoadedClass(name);
@@ -118,6 +118,11 @@ public class CustomClassLoader extends URLClassLoader {
                     "agentExecution", Instrumentation.class, cache.getClass()
             );
             agentExecution.invoke(null, instrumentation, cache);
+
+            Method configureOptionMehthod = workerClass.getMethod(
+                    "configureOption", String.class
+            );
+            configureOptionMehthod.invoke(null, args);
 
         } catch (NoSuchMethodException e) {
             System.out.println("NoSuchMethodException: " + e.getMessage());

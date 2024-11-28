@@ -81,26 +81,48 @@ public class InstrumentationUtils {
     }
 
     public static void retransformClasses(Instrumentation inst, ClassFileTransformer transformer,
-                                          List<Class<?>> classes) throws UnmodifiableClassException {
+                                          List<Class<?>> classes) throws UnmodifiableClassException, RuntimeException {
+        inst.addTransformer(transformer, true);
+        for (Class<?> clazz : classes) {
+            if (!isClassAlreadyTransformed(clazz)) {
+                inst.retransformClasses(clazz);
+                StringUtils.println("Retransform class successfully, Class: " + clazz.getName());
 
-                inst.addTransformer(transformer, true);
-                for (Class<?> clazz : classes) {
-                    inst.retransformClasses(clazz);
-//                    System.out.println("Retransform class successfully, Class: " + clazz.getName());
-                }
-                inst.removeTransformer(transformer);
-
-
+            }
+        }
+//        inst.removeTransformer(transformer);
 
     }
+
     public static boolean isClassAlreadyTransformed(Class<?> clazz) {
         try {
             // Check if the class has the marker field
-            clazz.getDeclaredField("__TRANSFORMED_BY_AGENT");
+//            clazz.getDeclaredField("__TRANSFORMED_BY_AGENT");
+            clazz.getDeclaredMethod("isModifiedMethod");
+
             return true;  // Marker exists, the class has been transformed
-        } catch (NoSuchFieldException e) {
+        } catch (NoSuchMethodException e) {
             return false;  // Marker doesn't exist, class needs transformation
         }
     }
+    public static void printLoadedClass(Instrumentation inst) {
+        StringUtils.println("All loaded classes: ");
+        for (Class<?> clazz : inst.getAllLoadedClasses()) {
+            if (clazz != null) {
+                try {
+                    // Get class
+//                    if (clazz.getPackage().toString().contains("org.example")) {
+//                        String className = clazz.toString();
+//                        StringUtils.println(className);
+//                    }
+                    StringUtils.println("Class: " + clazz.getName() + ", Class Loader: " + clazz.getClassLoader());
+                } catch (Exception e) {
+                    System.err.println("Error finding class: " + e.getMessage());
+                }
+//
+            }
+        }
 
     }
+
+}

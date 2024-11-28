@@ -15,8 +15,8 @@ public abstract class IFDSSetUp {
 
     protected static JimpleIFDSSolver<?, ?> solver = null;
 
-    protected JimpleIFDSSolver<?, ?> executeStaticAnalysis(String targetTestClassName,ArrayList<String> userDefinedFolders ) {
-        setupSoot(targetTestClassName,userDefinedFolders);
+    protected JimpleIFDSSolver<?, ?> executeStaticAnalysis(String targetTestClassName,String dumpFolder ) {
+        setupSoot(targetTestClassName,dumpFolder);
         registerSootTransformers();
         executeSootTransformers();
         if (solver == null) {
@@ -45,7 +45,7 @@ public abstract class IFDSSetUp {
      * This method provides the options to soot to analyse the respecive
      * classes.
      */
-    private void setupSoot(String targetTestClassName,ArrayList<String> userDefinedFolders) {
+    private void setupSoot(String targetTestClassName,String dumpFolder) {
         G.reset();
         String userdir = System.getProperty("user.dir");
         String javaHome = System.getProperty("java.home");
@@ -55,9 +55,9 @@ public abstract class IFDSSetUp {
 //        System.out.println("sootCp: " + sootCp);
 //        Options.v().set_soot_classpath(sootCp);
         StringBuilder sootCpBuilder = new StringBuilder();
-        for (String folder : userDefinedFolders) {
-            sootCpBuilder.append(folder).append(File.pathSeparator);
-        }
+
+        sootCpBuilder.append(dumpFolder).append(File.pathSeparator);
+
         sootCpBuilder.append(javaHome).append(File.separator).append("lib").append(File.separator).append("rt.jar");
         String sootCp = sootCpBuilder.toString();
         Options.v().set_soot_classpath(sootCp);
@@ -79,10 +79,10 @@ public abstract class IFDSSetUp {
         Scene.v().addBasicClass("java.lang.Runtime", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.reflect.Method", SootClass.SIGNATURES);
         SootClass c = Scene.v().forceResolve(targetTestClassName, SootClass.BODIES);
-        if (c.isPhantom()) {
-            System.out.println("The class is a phantom: " + c.getName());
-        } else {
-            System.out.println("Successfully converted to SootClass: " + c.getName());
+//        if (c.isPhantom()) {
+//            System.out.println("The class is a phantom: " + c.getName());
+//        } else {
+//            System.out.println("Successfully converted to SootClass: " + c.getName());
 
 //            // Example: Print out all methods in the SootClass
 //            c.getMethods().forEach(method -> {
@@ -95,7 +95,7 @@ public abstract class IFDSSetUp {
                 c.setApplicationClass();
             }
             Scene.v().loadNecessaryClasses();
-        }
+//        }
     }
 
     protected List<SootMethod> getEntryPointMethods() {
@@ -106,7 +106,7 @@ public abstract class IFDSSetUp {
 //                System.out.println("c.getMethods is null");
 //            }
             int methodCount = c.getMethodCount();
-            System.out.println("Method count for class " + c.getName() + ": " + methodCount);
+//            System.out.println("Method count for class " + c.getName() + ": " + methodCount);
 
             for (SootMethod m : c.getMethods()) {
 //                System.out.println("SootMethod: " + m.getName());

@@ -5,24 +5,22 @@ import com.sun.tools.attach.VirtualMachineDescriptor;
 import org.IAP491G3.Agent.Utils.LogUtils;
 import org.IAP491G3.Agent.Utils.StringUtils;
 
-import java.io.File;
+import java.io.*;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.SQLOutput;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import static org.IAP491G3.Agent.Loader.Contraints.*;
+import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentDirectory;
 import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentJarPath;
-import static org.IAP491G3.Agent.Utils.StringUtils.printProcessList;
-import static org.IAP491G3.Agent.Utils.StringUtils.printUsage;
+import static org.IAP491G3.Agent.Utils.StringUtils.*;
 
 
 public class AgentAttacher {
 
-    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^1\\.[0-5]");
+    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^1\\.[0-7]");
 
-    public static URL getAgentFileUrl() {
-        return Agent.class.getProtectionDomain().getCodeSource().getLocation();
-    }
 
     public static void attachJvm(String processId, String args, VMProxy vmLoader) {
         try {
@@ -42,31 +40,32 @@ public class AgentAttacher {
             printUsage();
             return;
         }
-
-//        String javaVersion = System.getProperty("java.version");
-//        if (JAVA_VERSION_PATTERN.matches(javaVersion).find()) {
-//            System.err.println("JDK Version: " + javaVersion + ". JDK Version Can Not Less Than 1.6!");
-//        }
-
+        String javaVersion = System.getProperty("java.version");
+        if (Pattern.matches(String.valueOf(JAVA_VERSION_PATTERN), javaVersion)) {
+            System.err.println("JDK Version: " + javaVersion + ". JDK Version Can Not Less Than 1.8!");
+            return;
+        }
+        if (!loadConfiguration()) {
+            StringUtils.printErr("Cannot load configuration");
+            return;
+        }
         if ("attach".equalsIgnoreCase(args[0]) || "detach".equalsIgnoreCase(args[0])) {
-//            attachJvm(args[1].trim(), args[0], vmProxy);
-            attachJvm(autoLoadingJVM(vmProxy), args[0], vmProxy);
+            if (UPLOAD_FOLDER == null) {
+                StringUtils.printErr("UPLOAD_FOLDER is null. Please config before proceeding.");
+                return;
+            }
+            args= addStringToStringArray(args,UPLOAD_FOLDER);
+            //            attachJvm(args[1].trim(), args[0], vmProxy);
+            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
         } else if ("list".equalsIgnoreCase(args[0])) {
             printProcessList(vmProxy.listJvmPid());
+        } else if ("config".equalsIgnoreCase(args[0])) {
+            configureUploadFolder();
         } else {
             printUsage();
         }
     }
 
-    public static Map<String, String> getProcessList() {
-        Map<String, String> processMap = new HashMap<String, String>();
-        for (VirtualMachineDescriptor vmDescriptor : VirtualMachine.list()) {
-            String displayName = vmDescriptor.displayName();
-            String targetPid = vmDescriptor.id();
-            processMap.put(vmDescriptor.id(), vmDescriptor.displayName());
-        }
-        return processMap;
-    }
 
     private static String autoLoadingJVM(VMProxy loader) {
         try {
@@ -78,7 +77,6 @@ public class AgentAttacher {
                 if (name.contains("bootstrap")) {
                     System.out.println("TOMCAT PID:" + processId);
                     return processId;
-
                 }
             }
         } catch (Exception e) {
@@ -86,5 +84,56 @@ public class AgentAttacher {
             e.printStackTrace();
         }
         return "";
+    }
+
+
+
+    private static boolean loadConfiguration() {
+        Properties properties = new Properties();
+        CONFIG_FILE = getCurrentDirectory() + FILE_SEPERATOR + "config.properties";
+        File configFile = new File(CONFIG_FILE);
+        if (!configFile.exists()) {
+            try {
+                if (configFile.createNewFile()) {
+                    System.out.println("Config file created. Please use option \"config\" to configure !");
+                    return false;
+                }
+            } catch (IOException e) {
+                StringUtils.printErr(e.getMessage());
+            }
+        }
+        try (FileInputStream in = new FileInputStream(CONFIG_FILE)) {
+            properties.load(in);
+        } catch (IOException e) {
+            StringUtils.printErr("Error loading configuration: " + e.getMessage());
+            return false;
+        }
+        System.out.println("Property: " + properties.getProperty("UPLOAD_FOLDER_PATH"));
+        UPLOAD_FOLDER = properties.getProperty("UPLOAD_FOLDER_PATH");
+        System.out.println("UPLOAD FOLDER: " + UPLOAD_FOLDER);
+        return true;
+    }
+
+    private static void saveConfigurationToFile() {
+        Properties properties = new Properties();
+        properties.setProperty("UPLOAD_FOLDER_PATH", UPLOAD_FOLDER);
+
+        try (FileOutputStream out = new FileOutputStream(CONFIG_FILE)) {
+            properties.store(out, "Agent Configuration");
+        } catch (IOException e) {
+            System.err.println("Error saving configuration: " + e.getMessage());
+        }
+    }
+
+    private static void configureUploadFolder() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the absolute path of the Upload folder: ");
+        String uploadFolder = scanner.nextLine();
+        Contraints.UPLOAD_FOLDER = (uploadFolder.isEmpty()) ? "None" : uploadFolder;
+        saveConfigurationToFile();
+        StringUtils.println("Configuration saved!");
+        scanner.close();
+
+
     }
 }

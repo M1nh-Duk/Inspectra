@@ -2,8 +2,8 @@ package org.IAP491G3.Agent.Utils;
 
 import java.io.*;
 
-
 import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
+
 
 public class PathUtils {
     public static String getCurrentJarPath() throws Exception {
@@ -17,35 +17,6 @@ public class PathUtils {
         }
     }
 
-    public static File getStorePath(Class clazz, boolean isClass){
-        String className = clazz.getName();
-        ClassLoader classLoader = clazz.getClassLoader();
-        String fileName;
-        String dumpType = "java";
-        if(isClass){
-            dumpType = "class";
-        }
-        File dumpDir = new File(PathUtils.getCurrentDirectory(), dumpType);
-        if (classLoader != null){
-            fileName = classLoader.getClass().getName() + "-" + Integer.toHexString(classLoader.hashCode()) + File.separator + className.replace(".", File.separator) + "." + dumpType;
-        } else {
-            fileName = className.replace(".", File.separator) + "." + dumpType;
-        }
-        return new File(dumpDir, fileName);
-    }
-
-    public static String getFileContent(File file){
-        try{
-            java.util.Scanner c = new java.util.Scanner(file).useDelimiter("\\A");
-            String content = c.next();
-            if(content != null){
-                return content;
-            }
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }
-        return "";
-    }
 
     public static void addTextToFile(File f, String content, boolean append){
         try{
@@ -67,54 +38,6 @@ public class PathUtils {
         addTextToFile(f, content, true);
     }
 
-    public static void writeTextToFile(File f, String content){
-        addTextToFile(f, content, false);
-    }
-
-    /**
-     * Writes a byte array to a file creating the file if it does not exist.
-     * <p>
-     * NOTE: As from v1.3, the parent directories of the file will be created
-     * if they do not exist.
-     *
-     * @param file  the file to write to
-     * @param data  the content to write to the file
-     * @since 1.1
-     */
-    public static void writeByteArrayToFile(File file, byte[] data){
-        try{
-            writeByteArrayToFile(file, data, false);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Writes a byte array to a file creating the file if it does not exist.
-     *
-     * @param file  the file to write to
-     * @param data  the content to write to the file
-     * @param append if {@code true}, then bytes will be added to the
-     * end of the file rather than overwriting
-     * @throws IOException in case of an I/O error
-     * @since IO 2.1
-     */
-    public static void writeByteArrayToFile(File file, byte[] data, boolean append) throws IOException {
-        OutputStream out = null;
-        try {
-            out = openOutputStream(file, append);
-            out.write(data);
-            out.close(); // don't swallow close Exception if copy completes normally
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
 
     /**
      * Opens a {@link FileOutputStream} for the specified file, checking and
@@ -158,14 +81,15 @@ public class PathUtils {
     }
 
     public static void createDumpFolder() {
-        File dumpDir = new File(DUMP_DIR);
+        File dumpDir = new File(PathUtils.getCurrentDirectory(), "dump");
         if (!dumpDir.exists()) {
             boolean created = dumpDir.mkdirs();
             if (created) {
-                StringUtils.println("Dump folder created at: " + DUMP_DIR);
+                StringUtils.println("Dump folder created at: " + dumpDir.getAbsolutePath());
             } else {
-                StringUtils.printAndLogErr(new IllegalAccessException("Failed to create dump folder at: " + DUMP_DIR));
+                StringUtils.printAndLogErr(new IllegalAccessException("Failed to create dump folder at: " + dumpDir.getAbsolutePath()));
             }
         }
+        DUMP_DIR = dumpDir.getAbsolutePath();
     }
 }

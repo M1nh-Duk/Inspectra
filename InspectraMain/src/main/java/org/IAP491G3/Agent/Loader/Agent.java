@@ -20,10 +20,11 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.jar.JarFile;
 
-import static org.IAP491G3.Agent.Loader.Contraints.AGENT_NAME;
+import static org.IAP491G3.Agent.Loader.Contraints.*;
 import static org.IAP491G3.Agent.Utils.InstrumentationUtils.invokeAgentCacheMethod;
 import static org.IAP491G3.Agent.Utils.InstrumentationUtils.invokeAgentCacheMethodWithCast;
 import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentJarPath;
+import static org.IAP491G3.Agent.Utils.StringUtils.convertToStringArray;
 
 
 public class Agent {
@@ -89,7 +90,6 @@ public class Agent {
             }
 
             if (customClassLoader != null && customClassLoader.closeClassLoader()) {
-                StringUtils.println("Release SuAgent Resource Success");
                 customClassLoader = null;
                 AGENT_CACHE = null;
             }
@@ -99,8 +99,9 @@ public class Agent {
     }
 
     private static void initiateAgent(final String arg, Instrumentation inst) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        String[] args = arg != null ? arg.split("\\s+") : new String[0];
+        String[] args = convertToStringArray(arg);//arg != null ? arg.split("\\s+") : new String[0];
         try {
+            System.out.println("ARGS: " + args[0]);
             StringUtils.println("Initiating agent...");
             if (customClassLoader == null) {
                 File agentFile = new File(getCurrentJarPath());
@@ -108,6 +109,7 @@ public class Agent {
                 inst.appendToBootstrapClassLoaderSearch(new JarFile(agentFile));
                 setCustomClassLoader(agentFileUrl);
             }
+
             if (AGENT_CACHE == null) {
                 StringUtils.println("AGENT_CACHE is null. Attempting to initialize...");
                 setAgentCache();
@@ -164,6 +166,7 @@ public class Agent {
             return;
         }
         try {
+            System.out.println("aget: " + agentArgs);
             initiateAgent(agentArgs, inst);
         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
                  InstantiationException | IllegalAccessException e) {
