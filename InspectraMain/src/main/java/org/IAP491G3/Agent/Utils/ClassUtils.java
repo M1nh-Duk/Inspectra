@@ -69,6 +69,10 @@ public class ClassUtils {
         String outputPath = getOutputPath(className,folder);
         System.out.println("outputPath: " + outputPath);
         File outputFile = new File(outputPath);
+        if (outputFile.exists()) {
+            StringUtils.println(outputPath + " already exists");
+            return;
+        }
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             fos.write(ctClass.toBytecode());
             ctClass.detach();

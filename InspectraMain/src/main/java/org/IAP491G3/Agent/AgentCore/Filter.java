@@ -47,8 +47,8 @@ public class Filter {
     );
 
     static final List<String> signController = Arrays.asList(
-            "registerMapping(",
-            "registerHandler("
+            "registerMapping",
+            "registerHandler"
     );
 
     static final List<String> signInterceptor = Arrays.asList(
@@ -57,7 +57,8 @@ public class Filter {
 
     // Define risky keyword to execute command
     static final List<String> riskKeyword = Arrays.asList(
-            ".getRuntime().exec(",
+            "getRuntime",
+            "exec",
             "ProcessBuilder",
             "/bin/bash",
             "/bin/sh",

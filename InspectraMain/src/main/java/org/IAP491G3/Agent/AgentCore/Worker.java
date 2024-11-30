@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.IAP491G3.Agent.AgentCore.Filter.filterBlackList;
@@ -16,7 +14,6 @@ import static org.IAP491G3.Agent.Loader.Contraints.*;
 import static org.IAP491G3.Agent.Utils.ClassUtils.*;
 
 import javassist.NotFoundException;
-import org.IAP491G3.Agent.Loader.Contraints;
 import org.IAP491G3.Agent.Utils.InstrumentationUtils;
 
 import static org.IAP491G3.Agent.Utils.LogUtils.logToJSON;
@@ -144,6 +141,7 @@ public class Worker {
                     synchronized (System.getProperties()) {
                         value = System.getProperty(malKey).toString();
                     }
+                    System.out.println("VALUE: "+value);
                     String tempClassList = malKey.split("__")[2];
                     String type = getType(malKey.split("__")[1]);
                     ArrayList<String> highlyMaliciousClass = getMalArray(tempClassList, value);
@@ -212,7 +210,7 @@ public class Worker {
                             classResult.setRetransformedStatus(retransformStatus);
                             if (classIsJSP) {
                                 classResult.setJSP(classIsJSP);
-                                Boolean JspDeleteStatus = deleteJspFile(className);
+                                Boolean JspDeleteStatus =false;// deleteJspFile(className);
                                 classResult.setJspDeleteStatus(JspDeleteStatus);
 
                             }
@@ -270,9 +268,11 @@ public class Worker {
         } else {
             highlyMaliciousClass.add(tempClassList);
         }
-        if (!value.startsWith("class")) {
+        if (value.startsWith("class")) {
+            value = value.substring(value.indexOf("class") + "class".length()).trim();
             highlyMaliciousClass.add(value);
         }
+        highlyMaliciousClass.add(value);
         return highlyMaliciousClass;
     }
 

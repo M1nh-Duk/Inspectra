@@ -15,12 +15,13 @@ public class MemoryTransformer implements ClassFileTransformer {
     public static final Map<String, String> suspiciousClassAndMethod = new HashMap<String, String>() {{
         put("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping", "registerMapping");
         put("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping", "registerHandler");
-        put("java.lang.Field", "getDeclaredField");
+//        put("java.lang.reflect.Field", "get");
         put("org.apache.tomcat.util.descriptor.web.FilterDef", "setFilterClass");
 //        put("URLClassLoader", "defineClass");
         put("org.apache.catalina.core.StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
         put("org.apache.catalina.core.StandardWrapper", "setServletClass");
     }};
+
     public static ClassPool systemClassPool;
     private AgentCache agentCache;
 
@@ -36,7 +37,6 @@ public class MemoryTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
         boolean isSuspiciousClass = false;
-
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
 //        System.out.println("==================\nTRansformer executed");
 //        System.out.println("ClassName: " + className);
@@ -56,7 +56,7 @@ public class MemoryTransformer implements ClassFileTransformer {
 //                System.out.println("Suspicious class: " + className);
                 ClassPool.getDefault().insertClassPath(new ClassClassPath(classBeingRedefined));
                 ClassPool classPool = ClassPool.getDefault();
-                classPool.appendClassPath(new LoaderClassPath(ClassLoader.getSystemClassLoader()));
+                classPool.appendClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
                 ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
                 if (contextClassLoader != null) {
                     classPool.appendClassPath(new LoaderClassPath(contextClassLoader));
@@ -94,7 +94,6 @@ public class MemoryTransformer implements ClassFileTransformer {
 //            System.out.println("fullPathClassName: " + fullPathClassName);
             ctClazz = classPool.get(targetClassName);
             // =========================================================================
-            String methodModifier = (targetMethodName.equals("setServletClass")) ? "public" : "private";
             CtMethod isFrameworkClassMethod = CtNewMethod.make(
                     "private static boolean isFrameworkClass(String className) {" +
                             // Check if the class belongs to a known web framework or server package
@@ -161,24 +160,25 @@ private static String generateInsertedCode(String methodName) {
 //            "String currentClassName = currentElement.getClassName();" +
 //            "System.out.println(currentElement);" +
 //            "}"+
+
             "StackTraceElement maliciousClass = stackTrace[2];" +
             "String result = maliciousClass.getClassName();"+
-                "if (!isFrameworkClass(maliciousClass.getClassName()) && !isGeneratedJspClass(maliciousClass.getClassName()) && !isFrameworkClass(stackTrace[3].getClassName())) {"+
+            "if (!isFrameworkClass(maliciousClass.getClassName()) && !isGeneratedJspClass(maliciousClass.getClassName()) && !isFrameworkClass(stackTrace[3].getClassName())) {"+
                     "result += \",\";"+
                     "int i = 3;"+
                     "while (i < stackTrace.length && !isFrameworkClass(stackTrace[i].getClassName())) {"+
                     "result += stackTrace[i].getClassName() + \",\";"+
                     "i++;"+
                     "}"+
-                "}"+
+            "}"+
 //            "System.out.println(\"THIS: \" + $0); " +
 //            "System.out.println(\"DETECTED $1 MALICIOUS OF PARAM: \" + $1.getClass()); " +
 //            "System.out.println(\"DETECTED MALICIOUS OF PARAM: \" + $1); " +
 
-//            "System.out.println(\"DETECTED MALICIOUS CLASS: \" + maliciousClass); " +
+
             "String propertyName = \"MAL__" + methodName + "__\" + result +\"__\" + System.currentTimeMillis();" +
             customCode+
-//            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
+            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
 //            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
             "} catch (Exception e) { " +
             "e.printStackTrace();" +

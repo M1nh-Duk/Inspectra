@@ -7,9 +7,7 @@ import javassist.expr.MethodCall;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
-import java.util.Objects;
-
-import static org.IAP491G3.Agent.AgentCore.Worker.testClass;
+import java.util.ArrayList;
 
 
 public class DestroyTransformer implements ClassFileTransformer {
@@ -43,6 +41,8 @@ public class DestroyTransformer implements ClassFileTransformer {
             System.out.println("DESTROY TRANSFORM  class: " + className);
             ClassPool.getDefault().insertClassPath(new ClassClassPath(classBeingRedefined));
             ClassPool classPool = ClassPool.getDefault();
+            System.out.println("Parent of current loader: " + loader.getParent().getParent().getParent().getParent());
+            classPool.appendClassPath(new LoaderClassPath(loader.getParent().getParent().getParent().getParent()));
             CtClass ctClazz;
             ctClazz = classPool.get(convertedClassName);
 
@@ -53,14 +53,22 @@ public class DestroyTransformer implements ClassFileTransformer {
             }
             ctClazz.instrument(new ExprEditor() {
                 @Override
-                public void edit(MethodCall m) throws CannotCompileException {
-                    if (m.getClassName().equals("java.lang.Runtime") && m.getMethodName().equals("exec")) {
+                public void edit(MethodCall m) throws CannotCompileException { //
+                    if (m.getClassName().equals("java.lang.Runtime") && m.getMethodName().equals("exec") ) { //(java.lang.Process) null
                         // Replace Runtime.exec() with logging and safe behavior
-                        m.replace("{ System.out.println(\"Blocked Runtime.exec() call\"); return null; }");
+                        System.out.println("Intercepting Runtime.exec() call!");
+                        m.replace("{ System.out.println(\"Blocked Runtime.exec() call\"); $_ = (java.lang.Process) null; }");
                     } else if (m.getClassName().equals("java.lang.ProcessBuilder")) {
                         // Replace ProcessBuilder instantiation with logging
+                        System.out.println("Intercepting ProcessBuilder call!");
                         m.replace("{ System.out.println(\"Blocked ProcessBuilder instantiation\"); $_ = null; }");
                     }
+//                    else if (m.getClassName().equals("java.lang.reflect.Method") && m.getMethodName().equals("invoke") ) {
+//                        // Replace Runtime.exec() with logging and safe behavior
+//                        System.out.println("Intercepting reflection call!");
+//                        m.replace("{ System.out.println(\"Blocked reflect call\"); $_ = (Object) null; }");
+//                    }
+
                 }
             });
 //            for (CtMethod method : methods) {
@@ -98,32 +106,7 @@ public class DestroyTransformer implements ClassFileTransformer {
                             "return true;" +
                             "}", ctClazz);
             ctClazz.addMethod(isModifiedMethod);
-//            CtField[] fields = ctClazz.getDeclaredFields();
-//            for (CtField field : fields) {
-//                if (!field.getName().equals("__TRANSFORMED_BY_AGENT")) {
-//                    ctClazz.removeField(field);
-//                }
-//            }
-            // **Add a Marker Field**
-//            try {
-//                // Check if the marker field already exists
-//                ctClazz.getDeclaredField("__TRANSFORMED_BY_AGENT");
-//                System.out.println("Class already transformed, skipping marker addition.");
-//            } catch (NotFoundException e) {
-//                // If the field doesn't exist, add it
-//                CtField markerField = new CtField(CtClass.booleanType, "__TRANSFORMED_BY_AGENT", ctClazz);
-//                markerField.setModifiers(Modifier.PUBLIC | Modifier.STATIC);
-//                ctClazz.addField(markerField, CtField.Initializer.constant(true));
-//                System.out.println("Marker added to class.");
-//            }
 
-            // **Remove All Constructors**
-//            CtConstructor[] constructors = ctClazz.getDeclaredConstructors();
-//            for (CtConstructor constructor : constructors) {
-//                ctClazz.removeConstructor(constructor);
-//            }
-//
-//            // **Write the transformed class back into the application**
             byte[] bytecode = ctClazz.toBytecode();
             System.out.println("Class successfully neutralized and marked.");
             ctClazz.detach();

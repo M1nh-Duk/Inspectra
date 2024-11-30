@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+Premain-Class: org.IAP491G3.Agent.Loader.Agent
 Main-Class: org.IAP491G3.Agent.Loader.AgentAttacher
 Agent-Class: org.IAP491G3.Agent.Loader.Agent
 Can-Redefine-Classes: true

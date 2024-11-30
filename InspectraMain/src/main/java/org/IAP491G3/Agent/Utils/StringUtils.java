@@ -1,9 +1,6 @@
 package org.IAP491G3.Agent.Utils;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.Map;
 
@@ -12,7 +9,6 @@ import static org.IAP491G3.Agent.Utils.LogUtils.getEventTime;
 import static org.IAP491G3.Agent.Utils.LogUtils.logit;
 
 public class StringUtils {
-    private static final Logger log = LoggerFactory.getLogger(StringUtils.class);
 
     public static String toLowerCase(String str) {
         return str.toLowerCase();

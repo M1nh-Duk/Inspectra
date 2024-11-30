@@ -1,16 +1,9 @@
 package org.IAP491G3.Agent.Loader;
 
-import com.sun.tools.attach.VirtualMachine;
-import com.sun.tools.attach.VirtualMachineDescriptor;
-import org.IAP491G3.Agent.Utils.LogUtils;
 import org.IAP491G3.Agent.Utils.StringUtils;
-
 import java.io.*;
-import java.net.URL;
-import java.sql.SQLOutput;
 import java.util.*;
 import java.util.regex.Pattern;
-
 import static org.IAP491G3.Agent.Loader.Contraints.*;
 import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentDirectory;
 import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentJarPath;
@@ -56,7 +49,8 @@ public class AgentAttacher {
             }
             args= addStringToStringArray(args,UPLOAD_FOLDER);
             //            attachJvm(args[1].trim(), args[0], vmProxy);
-            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
+//            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
+            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
         } else if ("list".equalsIgnoreCase(args[0])) {
             printProcessList(vmProxy.listJvmPid());
         } else if ("config".equalsIgnoreCase(args[0])) {
