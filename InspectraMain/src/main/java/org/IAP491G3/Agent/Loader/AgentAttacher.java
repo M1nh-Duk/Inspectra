@@ -63,8 +63,8 @@ public class AgentAttacher {
             args = addStringToStringArray(args, UPLOAD_FOLDER);
 
             //            attachJvm(args[1].trim(), args[0], vmProxy);
-//            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
-            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
+            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
+//            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
         } else if ("list".equalsIgnoreCase(args[0])) {
             printProcessList(vmProxy.listJvmPid());
         } else if ("config".equalsIgnoreCase(args[0])) {

@@ -152,6 +152,9 @@ public class MemoryTransformer implements ClassFileTransformer {
 
 
 private static String generateInsertedCode(String methodName) {
+        if (methodName.equals("get")){
+            return "";
+        }
     String customCode = ((methodName.equals("setFilterClass") || methodName.equals("setServletClass"))) ?
             "java.lang.System.setProperty(propertyName, $1);":"java.lang.System.setProperty(propertyName, \"\"+$1.getClass());";
     return "{ " +
@@ -178,6 +181,7 @@ private static String generateInsertedCode(String methodName) {
                     "i++;"+
                     "}"+
             "}"+
+
 //            "System.out.println(\"THIS: \" + $0); " +
 //            "System.out.println(\"DETECTED $1 MALICIOUS OF PARAM: \" + $1.getClass()); " +
 //            "System.out.println(\"DETECTED MALICIOUS OF PARAM: \" + $1); " +
