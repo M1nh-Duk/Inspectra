@@ -127,14 +127,14 @@ public class Agent {
                     if (args.length > 0) {
                         if ("detach".equalsIgnoreCase(args[0])) {
                             if (invokeAgentCacheMethodWithCast(AGENT_CACHE, "getInstrumentation", Instrumentation.class, false) == null) {
-                                StringUtils.println(AGENT_NAME + "Not yet injected!");
+                                StringUtils.println(AGENT_NAME + " Not yet injected!");
                                 return;
                             }
                             detachAgent();
                             return;
                         }
                         else if ("attach".equalsIgnoreCase(args[0]) && invokeAgentCacheMethodWithCast(AGENT_CACHE, "getInstrumentation", Instrumentation.class, false) != null) {
-                            StringUtils.println(AGENT_NAME + "Already injected!");
+                            StringUtils.println(AGENT_NAME + " Already injected!");
                             return;
                         }
                     }

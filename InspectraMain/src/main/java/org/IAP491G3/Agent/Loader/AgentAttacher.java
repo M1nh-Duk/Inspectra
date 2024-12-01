@@ -20,13 +20,19 @@ public class AgentAttacher {
 
     public static void attachJvm(String processId, String args, VMProxy vmLoader) {
         try {
+            int pid = Integer.parseInt(processId.trim());
+
             Object vm = vmLoader.attach(processId);
 //            System.out.println("loaderFileUrl.toURI()).getAbsolutePath(): ");
 //            vmLoader.loadAgent(vm, new File(getAgentFileUrl().toURI()).getAbsolutePath(), args);
             vmLoader.loadAgent(vm, getCurrentJarPath(), args);
             vmLoader.detach(vm);
-        } catch (Exception e) {
-            StringUtils.printAndLogErr(e);
+        }
+        catch (NumberFormatException e) {
+            // Handle the case where processId is not a valid integer
+            System.err.println("Invalid process ID: " + processId + ". Please provide a valid integer.");
+        }catch (Exception e) {
+            System.err.println(e.getCause());
         }
     }
 
@@ -42,7 +48,9 @@ public class AgentAttacher {
             return;
         }
         if (!loadConfiguration()) {
-            StringUtils.printErr("Cannot load configuration");
+            StringUtils.printErr("Cannot load configuration!");
+            StringUtils.printErr("Please config first!");
+            doConfig();
             return;
         }
         if ("attach".equalsIgnoreCase(args[0]) || "detach".equalsIgnoreCase(args[0])) {
@@ -55,12 +63,12 @@ public class AgentAttacher {
             args = addStringToStringArray(args, UPLOAD_FOLDER);
 
             //            attachJvm(args[1].trim(), args[0], vmProxy);
-            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
-//            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
+//            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
+            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
         } else if ("list".equalsIgnoreCase(args[0])) {
             printProcessList(vmProxy.listJvmPid());
         } else if ("config".equalsIgnoreCase(args[0])) {
-            configureUploadFolder();
+            doConfig();
         } else {
             printUsage();
         }
@@ -138,7 +146,7 @@ public class AgentAttacher {
         }
     }
 
-    private static void configureUploadFolder() {
+    private static void doConfig() {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter the absolute path of the Upload folder: ");
         String uploadFolder = scanner.nextLine();

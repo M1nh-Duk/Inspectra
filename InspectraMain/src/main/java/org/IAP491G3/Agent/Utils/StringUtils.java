@@ -15,16 +15,31 @@ public class StringUtils {
     }
 
     public static void printUsage() {
+        System.out.println("======================================================");
         System.out.println(AGENT_NAME + " (Java Agent)");
-        System.out.println("Usage: java -jar " + AGENT_LOADER_FILE_NAME + " [Options]");
-        System.out.println("  1) detach [Java PID]");
-        System.out.println("  2) attach [Java PID]");
-        System.out.println("\r\n");
+        System.out.println("Usage: java -jar " + AGENT_LOADER_FILE_NAME + " [Options] [Flags]");
+        System.out.println("Options: ");
+        System.out.println("  1) attach [Java PID] - Attach to desired JVM process");
+        System.out.println("  2) detach [Java PID] - Detach to desired JVM process");
+        System.out.println("  3) list              - List all current JVM processes");
+        System.out.println("  4) config            - Config server's upload folder and whitelist classes" +
+                "\n                         (Note: For any config missing just press Enter).");
+
+        System.out.println("Flags: ");
+        System.out.println("  -auto: Automatically retransformed suspicious class and delete JSP file if found");
+        System.out.println("  -silent: Do not print out to console");
+
+        System.out.println("\r");
         System.out.println("EXAMPLES :");
         System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " attach 10001");
+        System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " attach 10001 -auto");
+        System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " attach 10001 -auto -silent");
+        System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " attach 10001 -silent");
         System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " detach 10001");
+        System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " list");
+        System.out.println("  java -jar " + AGENT_LOADER_FILE_NAME + " config");
+
         System.out.println("\r\n");
-        System.out.println("JVM PID List:");
     }
 
     public static String[] convertToStringArray(String str) {
