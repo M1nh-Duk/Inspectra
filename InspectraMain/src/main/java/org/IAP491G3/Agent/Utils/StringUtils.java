@@ -114,6 +114,7 @@ public class StringUtils {
             stackTraceBuilder.append(element.toString()).append("\n");
         });
         logit("Exception occured: " + e.getMessage());
+        logit("Caused by: " + e.getCause());
         logit("Stacktrace:\n" + stackTraceBuilder.toString());
     }
 

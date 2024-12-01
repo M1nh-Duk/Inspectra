@@ -15,7 +15,7 @@ public class MemoryTransformer implements ClassFileTransformer {
     public static final Map<String, String> suspiciousClassAndMethod = new HashMap<String, String>() {{
         put("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping", "registerMapping");
         put("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping", "registerHandler");
-//        put("java.lang.reflect.Field", "get");
+        put("java.lang.reflect.Field", "get");
         put("org.apache.tomcat.util.descriptor.web.FilterDef", "setFilterClass");
 //        put("URLClassLoader", "defineClass");
         put("org.apache.catalina.core.StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
@@ -94,12 +94,18 @@ public class MemoryTransformer implements ClassFileTransformer {
 //            System.out.println("fullPathClassName: " + fullPathClassName);
             ctClazz = classPool.get(targetClassName);
             // =========================================================================
-            CtMethod isFrameworkClassMethod = CtNewMethod.make(
-                    "private static boolean isFrameworkClass(String className) {" +
+            CtMethod isWhitelist = CtNewMethod.make(
+                    "private static boolean isWhitelist(String className) {" +
+//                            "System.out.println(\"className: \" + className);"+
                             // Check if the class belongs to a known web framework or server package
-                            "return className.startsWith(\"org.apache.\") || className.startsWith(\"javax.servlet.\") || className.startsWith(\"java.\");" +
+                            "if (className.startsWith(\"org.apache.jsp.uploads\"))"+
+                            "{"+
+                                "return false;"+
+                            "}"+
+                            "return className.startsWith(\"org.eclipse.jdt\") || className.startsWith(\"org.apache.\")" +
+                            "|| className.startsWith(\"javax\") || className.startsWith(\"java.\") || className.startsWith(\"com.google.gson.internal\") ;" +
                             "}", ctClazz);
-            ctClazz.addMethod(isFrameworkClassMethod);
+            ctClazz.addMethod(isWhitelist);
 
             CtMethod isGeneratedJspClassMethod = CtNewMethod.make(
                     "private static boolean isGeneratedJspClass(String className) {" +
@@ -127,7 +133,7 @@ public class MemoryTransformer implements ClassFileTransformer {
                     if (declaredMethod.getName().equals(methodName)) {
                         ctMethod = declaredMethod; // Use declaredMethod instead of re-fetch
                         StringUtils.println("Injecting into CtClass: " + ctClazz.getName() + ", Method: " + ctMethod.getName());
-                        ctMethod.insertAfter(generateInsertedCode(ctMethod.getName()));
+                        ctMethod.insertBefore(generateInsertedCode(ctMethod.getName()));
                     }
                 }
             }
@@ -163,10 +169,11 @@ private static String generateInsertedCode(String methodName) {
 
             "StackTraceElement maliciousClass = stackTrace[2];" +
             "String result = maliciousClass.getClassName();"+
-            "if (!isFrameworkClass(maliciousClass.getClassName()) && !isGeneratedJspClass(maliciousClass.getClassName()) && !isFrameworkClass(stackTrace[3].getClassName())) {"+
+            "if (!isWhitelist(maliciousClass.getClassName())){"+
+            "if ( !isGeneratedJspClass(maliciousClass.getClassName()) && !isWhitelist(stackTrace[3].getClassName())) {"+
                     "result += \",\";"+
                     "int i = 3;"+
-                    "while (i < stackTrace.length && !isFrameworkClass(stackTrace[i].getClassName())) {"+
+                    "while (i < stackTrace.length && !isWhitelist(stackTrace[i].getClassName())) {"+
                     "result += stackTrace[i].getClassName() + \",\";"+
                     "i++;"+
                     "}"+
@@ -174,13 +181,14 @@ private static String generateInsertedCode(String methodName) {
 //            "System.out.println(\"THIS: \" + $0); " +
 //            "System.out.println(\"DETECTED $1 MALICIOUS OF PARAM: \" + $1.getClass()); " +
 //            "System.out.println(\"DETECTED MALICIOUS OF PARAM: \" + $1); " +
-
-
             "String propertyName = \"MAL__" + methodName + "__\" + result +\"__\" + System.currentTimeMillis();" +
             customCode+
-            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
+//            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
 //            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
+            "}"+
             "} catch (Exception e) { " +
+            "System.out.println(\"HELLO: \"); " +
+            "System.out.println(\"Cause: \" + e.getCause().toString());" +
             "e.printStackTrace();" +
                 "} " +
             "}";

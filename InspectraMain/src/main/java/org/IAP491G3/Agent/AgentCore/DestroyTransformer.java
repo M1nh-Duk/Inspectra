@@ -3,6 +3,7 @@ package org.IAP491G3.Agent.AgentCore;
 import javassist.*;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
+import org.IAP491G3.Agent.Utils.StringUtils;
 
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -41,7 +42,6 @@ public class DestroyTransformer implements ClassFileTransformer {
             System.out.println("DESTROY TRANSFORM  class: " + className);
             ClassPool.getDefault().insertClassPath(new ClassClassPath(classBeingRedefined));
             ClassPool classPool = ClassPool.getDefault();
-            System.out.println("Parent of current loader: " + loader.getParent().getParent().getParent().getParent());
             classPool.appendClassPath(new LoaderClassPath(loader.getParent().getParent().getParent().getParent()));
             CtClass ctClazz;
             ctClazz = classPool.get(convertedClassName);
@@ -108,7 +108,7 @@ public class DestroyTransformer implements ClassFileTransformer {
             ctClazz.addMethod(isModifiedMethod);
 
             byte[] bytecode = ctClazz.toBytecode();
-            System.out.println("Class successfully neutralized and marked.");
+            StringUtils.println("Class successfully neutralized and marked.");
             ctClazz.detach();
             return bytecode;
         } catch (NotFoundException | CannotCompileException | IOException e) {

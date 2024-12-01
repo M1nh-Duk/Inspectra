@@ -90,7 +90,7 @@ public class InstrumentationUtils {
 
             }
         }
-//        inst.removeTransformer(transformer);
+        inst.removeTransformer(transformer);
 
     }
 

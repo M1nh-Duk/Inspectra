@@ -55,9 +55,9 @@ public abstract class IFDSSetUp {
 //        System.out.println("sootCp: " + sootCp);
 //        Options.v().set_soot_classpath(sootCp);
         StringBuilder sootCpBuilder = new StringBuilder();
-
+        System.out.println("Soot class: " + targetTestClassName);
         sootCpBuilder.append(dumpFolder).append(File.pathSeparator);
-
+        System.out.println("Soot dumpFolder: " + dumpFolder);
         sootCpBuilder.append(javaHome).append(File.separator).append("lib").append(File.separator).append("rt.jar");
         String sootCp = sootCpBuilder.toString();
         Options.v().set_soot_classpath(sootCp);
@@ -78,6 +78,7 @@ public abstract class IFDSSetUp {
         Scene.v().addBasicClass("java.lang.ProcessBuilder", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.Runtime", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.reflect.Method", SootClass.SIGNATURES);
+        System.out.println("TAINT targetTestClassName: "+ targetTestClassName);
         SootClass c = Scene.v().forceResolve(targetTestClassName, SootClass.BODIES);
 //        if (c.isPhantom()) {
 //            System.out.println("The class is a phantom: " + c.getName());

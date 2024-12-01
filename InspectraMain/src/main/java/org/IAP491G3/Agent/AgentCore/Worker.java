@@ -11,9 +11,11 @@ import java.util.*;
 import static org.IAP491G3.Agent.AgentCore.Filter.filterBlackList;
 import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.suspiciousClassAndMethod;
 import static org.IAP491G3.Agent.Loader.Contraints.*;
+import static org.IAP491G3.Agent.Loader.Contraints.WHITELIST_CLASS;
 import static org.IAP491G3.Agent.Utils.ClassUtils.*;
 
 import javassist.NotFoundException;
+import org.IAP491G3.Agent.Loader.Contraints;
 import org.IAP491G3.Agent.Utils.InstrumentationUtils;
 
 import static org.IAP491G3.Agent.Utils.LogUtils.logToJSON;
@@ -147,6 +149,10 @@ public class Worker {
                     ArrayList<String> highlyMaliciousClass = getMalArray(tempClassList, value);
                     for (String className : highlyMaliciousClass) {
                         String fullPathclassName = className;
+                        if (isWhitelist(fullPathclassName)){
+//                            StringUtils.printAndLog("Class " + className + " is whitelisted");
+                            continue;
+                        }
 //                        System.out.println("fullpath: " + fullPathclassName);
                         Result classResult = new Result(fullPathclassName, type);
                         Map<String, List<String>> filterResult = null;
@@ -188,7 +194,6 @@ public class Worker {
                         if (classResult.getRiskScore() < 5) {
                             String classOutputPath;
 //                            classOutputPath = (classIsJSP) ? getOutputPath(className, JSP_FOLDER) : getOutputPath(className, DUMP_DIR);
-                            System.out.println("DUMPDUNMP IR: " + DUMP_DIR);
                             classOutputPath = getOutputPath(className, DUMP_DIR);
 
 //                            StringUtils.printAndLog("classOutputPath: " + classOutputPath);
@@ -258,7 +263,20 @@ public class Worker {
         Iterator<String> iterator = malProperties.iterator();
         return iterator;
     }
-
+    private static boolean isWhitelist (String className){
+        if (className.startsWith("org.apache.jsp.uploads")){
+            return false;
+        }
+        if (className.startsWith("org.apache") || className.startsWith("javax") || className.startsWith("java")){
+            return true;
+        }
+        for (String wl : WHITELIST_CLASS){
+            if (className.startsWith(wl)){
+                return true;
+            }
+        }
+        return false;
+    }
     private static ArrayList<String> getMalArray(String tempClassList, String value) {
         ArrayList<String> highlyMaliciousClass = new ArrayList<String>();
         if (tempClassList.contains(",")) {
@@ -276,142 +294,6 @@ public class Worker {
         return highlyMaliciousClass;
     }
 
-    /*
-        public static void activeListening(Instrumentation inst) {
-    
-            System.out.println("========================= ACTIVE LISTENING ===============================");
-            String exceptionKey = null;
-    
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    ArrayList<String> malProperties = new ArrayList<>();
-                    Properties properties = System.getProperties();
-                    Enumeration<?> propertyNames = properties.propertyNames();
-                    while (propertyNames.hasMoreElements()) {
-                        String key = (String) propertyNames.nextElement();
-                        if (key.startsWith("MAL")) {
-                            malProperties.add(key);
-                        }
-                    }
-                    if (!malProperties.isEmpty()) {
-                        System.out.println("malproperties is empty: " + malProperties.isEmpty());
-    
-                    }
-                    propertyNames = null;
-                    properties = null;
-                    Iterator<String> iterator = malProperties.iterator();
-                    while (iterator.hasNext()) {
-                        String malKey = iterator.next();
-                        exceptionKey = malKey;
-                        StringUtils.println("Key: " + malKey);// + "Value: " + System.getProperty(malKey));
-                        String value = System.getProperty(malKey).toString();
-                        String tempClassList = malKey.split("__")[2];
-                        String type = getType(malKey.split("__")[1]);
-                        ArrayList<String> highlyMaliciousClass = new ArrayList<String>();
-                        if (tempClassList.contains(",")) {
-                            for (String item : tempClassList.split(",")) {
-                                highlyMaliciousClass.add(item.trim());
-                            }
-                        } else {
-                            highlyMaliciousClass.add(tempClassList);
-                        }
-                        if (!value.startsWith("class")) {
-                            highlyMaliciousClass.add(value);
-                        }
-                        for (String className : highlyMaliciousClass) {
-                            String fullPathclassName = className;
-                            System.out.println("fullpath: " + fullPathclassName);
-                            Result classResult = new Result(fullPathclassName, 0, type);
-                            Map<String, List<String>> filterResult = null;
-                            boolean classIsJSP = false;
-                            if (className.toLowerCase().contains("standardcontext")) {
-                                continue;
-                            }
-    
-                            StringUtils.printAndLog("==============> FOUND SUSPICIOUS CLASS: " + fullPathclassName);
-    
-                            if (className.contains("_jsp")) {
-                                className = className.substring(className.lastIndexOf("."));
-                                classIsJSP = true;
-                            }
-    
-    //                        StringUtils.println("Temp class Name: " + fullPathclassName);
-                            Class<?> tempClass = getLoadedClassObjByCLassName(inst, className);
-                            if (InstrumentationUtils.isClassAlreadyTransformed(tempClass)) {
-                                StringUtils.printAndLog("Class already destroyed ! Aborting this class .... ");
-                                continue;
-                            }
-    //                        StringUtils.println("FOUND CLASS OBJECT FOR: " + tempClass.getName());
-                            if (!classIsJSP) {
-                                dumpClass(inst, className, DUMP_DIR);
-                            }
-                            className = className.substring(className.lastIndexOf(".") + 1);
-    //
-                            boolean taintResult = taintManager.taint(className, new ArrayList<>(Arrays.asList(JSP_FOLDER, DUMP_DIR)));
-                            classResult.setTaintResult(taintResult);
-                            if (taintResult) {
-                                classResult.setRiskScore(5);
-                                StringUtils.println("TAINT RESULT: CLASS IS MALICIOUS");
-                            }
-                            if (classResult.getRiskScore() < 5) {
-                                String classOutputPath;
-                                classOutputPath = (classIsJSP) ? getOutputPath(className, JSP_FOLDER) : getOutputPath(className, DUMP_DIR);
-                                StringUtils.printAndLog("classOutputPath: " + classOutputPath);
-                                String decompiledClass = decompileClass(classOutputPath, null, false);
-    //                            StringUtils.println(decompiledClass);
-    //                            StringUtils.println("========================================= AFTER +++=++++++++++++++++++++");
-                                filterResult = filterBlackList(decompiledClass, className, true);
-                                int tempRiskScore = classResult.getRiskScore();
-                                tempRiskScore += Integer.valueOf(filterResult.get("RiskScore").get(0));
-                                classResult.setRiskScore(tempRiskScore);
-                                classResult.setFilterResult(filterResult);
-                            }
-                            if (riskScore >= 5) {
-                                try {
-                                    boolean retransformStatus =  retransformMalClass(inst, fullPathclassName, tempClass);
-                                    classResult.setRetransformedStatus(retransformStatus);
-                                } catch (UnmodifiableClassException e) {
-                                    printAndLogErr(e);
-                                }
-                                if (classIsJSP) {
-                                    classResult.setJSP(classIsJSP);
-    //                            classResult.setJspDeleteStatus(deleteJspFile(className));
-                                    classResult.setJspDeleteStatus(false);
-    
-                                }
-                            }
-    
-                            handleResult(classResult);
-                            System.out.println("TEST2");
-                        }
-                        iterator.remove();
-                        System.out.println("ITER REMOVED");
-                        synchronized (System.getProperties()) {
-                            if (!(System.getProperty(malKey) == null)) {
-                                System.clearProperty(malKey);
-                                System.out.println("CLEAR KEY: " + malKey);
-                            }
-                        }
-                        Thread.sleep(1000);  // Replace with actual wait logic if applicable
-                    }
-    
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();  // Preserve interrupt status
-            } catch (RuntimeException e) {
-    //            synchronized (System.getProperties()) {
-    //                if (!(System.getProperty(exceptionKey) == null)) {
-    //                    System.clearProperty(exceptionKey);
-    //                }
-    //            }
-                throw new RuntimeException(e);
-            } catch (NotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    */
     private static String getType(String methodName) {
         String[] type = {"Tomcat Filter", "Tomcat Listener", "Tomcat Servlet", "Spring Controller", "Spring Interceptor", "Generic"};
         if (methodName.equals("setFilterClass")) {
@@ -435,6 +317,10 @@ public class Worker {
 
     private static boolean retransformMalClass(Instrumentation inst, String className, Class<?> clazzObj) throws
             UnmodifiableClassException, RuntimeException {
+        if (isWhitelist(className)){
+            StringUtils.printAndLog("Class " + className + " is whitelisted");
+            return false;
+        }
         if (!OPTION_AUTO_DELETE) {
             Scanner scanner = new Scanner(System.in); // Create a scanner object for user input
             StringUtils.println("Do you want to retransform this class? (Y/N): ");
@@ -544,15 +430,29 @@ public class Worker {
     public static void configureOption(String args) {
         String[] tempArgs= convertToStringArray(args);
         for (String arg : tempArgs) {
+            System.out.println("ARGS: " + arg);
             if ("-silent".equalsIgnoreCase(arg)) {
                 OPTION_SILENT = true;
             } else if ("-auto".equalsIgnoreCase(arg)) {
                 OPTION_AUTO_DELETE = true;
             }
         }
-
         UPLOAD_FOLDER = tempArgs[tempArgs.length - 1];
-//        System.out.println("UPLOAD_FOLDER: " + UPLOAD_FOLDER);
+        String whitelistClass = tempArgs[tempArgs.length - 2];
+//        WHITELIST_CLASS.add("org.IAP491");
+
+        if (!whitelistClass.equals("None")){
+            if (whitelistClass.contains(";")) {
+                WHITELIST_CLASS.addAll(Arrays.asList(whitelistClass.split(";")));
+            }
+            else {
+                WHITELIST_CLASS.add(whitelistClass);
+            }
+        }
+        for (String temp: WHITELIST_CLASS){
+            System.out.println("TEMP: " + temp);
+        }
+
 
     }
-    }
+}
