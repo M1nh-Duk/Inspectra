@@ -3,7 +3,7 @@
 
 ## Overview
 
-**Inspectra** is a lightweight monitoring tool, designed to detect and neutralize memory webshell on Apache Tomcat server. This repository includes source code and an executable JAR file of the tool.
+**Inspectra** is a lightweight monitoring tool, designed to detect and neutralize memory webshell (currently for detecting techniques that utilize Tomcat web components and Spring framwork components) on Apache Tomcat server. This repository includes source code and an executable JAR file of the tool.
 
 ## Features
 
@@ -70,5 +70,8 @@ Ensure you have the following installed on your system:
     java -jar Inspectra.jar config
 
    ```
+
+![Screenshot 2024-12-15 115428](https://github.com/user-attachments/assets/847bcc8c-db09-4979-9503-b54a009f7a76)
+
    
 
