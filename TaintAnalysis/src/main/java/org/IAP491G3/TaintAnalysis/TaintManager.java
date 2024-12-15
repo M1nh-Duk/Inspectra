@@ -23,35 +23,11 @@ public class TaintManager extends IFDSSetUp {
         List<SootMethodRef> sources = new ArrayList<>();
         List<SootMethodRef> sinks = new ArrayList<>();
 
-//        SootClass handlerMethodMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractHandlerMethodMapping");
-//        SootMethodRef registerMapping = new SootMethodRefImpl(handlerMethodMappingClass, "registerMapping", Collections.emptyList(), VoidType.v(), false);
-//        sources.add(registerMapping);
 
         SootClass servletRequestClass = Scene.v().getSootClass("javax.servlet.http.HttpServletRequest");
         SootMethodRef getParameter = new SootMethodRefImpl(servletRequestClass, "getParameter", Collections.singletonList(RefType.v("java.lang.String")), RefType.v("java.lang.String"), false);
         sources.add(getParameter);
 
-        // AbstractUrlHandlerMapping: registerHandler
-//        SootClass urlHandlerMappingClass = Scene.v().getSootClass("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping");
-//        SootMethodRef registerHandler = new SootMethodRefImpl(urlHandlerMappingClass, "registerHandler", Collections.emptyList(), VoidType.v(), false);
-//        sources.add(registerHandler);
-
-        // Field: get
-//        SootClass fieldClass = Scene.v().getSootClass("java.lang.reflect.Field");
-//        SootMethodRef fieldGet = new SootMethodRefImpl(fieldClass, "get", Collections.singletonList(RefType.v("java.lang.Object")), RefType.v("java.lang.Object"), false);
-//        sources.add(fieldGet);
-
-        // FilterDef: setFilterName
-//        SootClass filterDefClass = Scene.v().getSootClass("org.apache.tomcat.util.descriptor.web.FilterDef");
-//        SootMethodRef setFilterName = new SootMethodRefImpl(filterDefClass, "setFilterName", Collections.singletonList(RefType.v("java.lang.String")), VoidType.v(), false);
-//        sources.add(setFilterName);
-
-        // StandardContext: addApplicationEventListener, addServletMappingDecoded
-//        SootClass standardContextClass = Scene.v().getSootClass("org.apache.catalina.core.StandardContext");
-//        SootMethodRef addApplicationEventListener = new SootMethodRefImpl(standardContextClass, "addApplicationEventListener", Arrays.asList(RefType.v("java.util.EventListener")), VoidType.v(), false);
-//        SootMethodRef addServletMappingDecoded = new SootMethodRefImpl(standardContextClass, "addServletMappingDecoded", Arrays.asList(RefType.v("java.lang.String"), RefType.v("java.lang.String")), VoidType.v(), false);
-//        sources.add(addApplicationEventListener);
-//        sources.add(addServletMappingDecoded);
 
         SootClass processBuilderClass = Scene.v().getSootClass("java.lang.ProcessBuilder");
         SootMethodRef processBuilderStart = new SootMethodRefImpl(processBuilderClass, "start", Collections.emptyList(), RefType.v("java.lang.Process"), true);
