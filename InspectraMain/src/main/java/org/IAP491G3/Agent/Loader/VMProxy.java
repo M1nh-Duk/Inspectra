@@ -1,5 +1,7 @@
 package org.IAP491G3.Agent.Loader;
 
+import org.IAP491G3.Agent.Utils.StringUtils;
+
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -24,7 +26,7 @@ public class VMProxy {
                 URL[] urls = new URL[]{toolsJar.toURI().toURL()};
                 virtualMachineClass = new URLClassLoader(urls).loadClass(virtualMachineName);
             } catch (Exception ex) {
-                System.out.println("Load tools.jar Exception: " + e);
+                StringUtils.printErr("Load tools.jar Exception: " + e);
                 ex.printStackTrace();
             }
         }

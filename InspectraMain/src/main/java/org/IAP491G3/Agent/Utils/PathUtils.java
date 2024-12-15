@@ -39,28 +39,6 @@ public class PathUtils {
     }
 
 
-    /**
-     * Opens a {@link FileOutputStream} for the specified file, checking and
-     * creating the parent directory if it does not exist.
-     * <p>
-     * At the end of the method either the stream will be successfully opened,
-     * or an exception will have been thrown.
-     * <p>
-     * The parent directory will be created if it does not exist.
-     * The file will be created if it does not exist.
-     * An exception is thrown if the file object exists but is a directory.
-     * An exception is thrown if the file exists but cannot be written to.
-     * An exception is thrown if the parent directory cannot be created.
-     *
-     * @param file  the file to open for output, must not be {@code null}
-     * @param append if {@code true}, then bytes will be added to the
-     * end of the file rather than overwriting
-     * @return a new {@link FileOutputStream} for the specified file
-     * @throws IOException if the file object is a directory
-     * @throws IOException if the file cannot be written to
-     * @throws IOException if a parent directory needs creating but that fails
-     * @since 2.1
-     */
     public static FileOutputStream openOutputStream(File file, boolean append) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {

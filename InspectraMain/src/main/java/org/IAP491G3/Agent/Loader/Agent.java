@@ -4,13 +4,11 @@ package org.IAP491G3.Agent.Loader;
 import org.IAP491G3.Agent.Utils.LogUtils;
 import org.IAP491G3.Agent.Utils.StringUtils;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
+
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -99,9 +97,8 @@ public class Agent {
     }
 
     private static void initiateAgent(final String arg, Instrumentation inst) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        String[] args = convertToStringArray(arg);//arg != null ? arg.split("\\s+") : new String[0];
+        String[] args = convertToStringArray(arg);
         try {
-            System.out.println("ARGS: " + args[0]);
             StringUtils.println("Initiating agent...");
             if (customClassLoader == null) {
                 File agentFile = new File(getCurrentJarPath());
@@ -142,9 +139,6 @@ public class Agent {
                     throw new RuntimeException(e);
                 }
                 invokeAgentCacheMethod(AGENT_CACHE, "setInstrumentation", true, inst);
-//                StringUtils.println("Cache Instrumentation set successfully.");
-//                    Instrumentation testInst = invokeAgentCacheMethodWithCast("getInstrumentation", Instrumentation.class);
-//                    StringUtils.println();(testInst.toString());
                 customClassLoader.loadAgent(new File(getCurrentJarPath()), arg, inst, AGENT_CACHE);
 
             }
@@ -160,42 +154,19 @@ public class Agent {
     }
 
     public static void agentmain(String agentArgs, Instrumentation inst) {
-        StringUtils.println("\n=================\nAgentmain executed: Test Agent attached.");
+//            StringUtils.println("\n=================\nAgentmain executed: Test Agent attached.");
         if (!inst.isRetransformClassesSupported()) {
             StringUtils.printAndLog("Class retransformation is not supported.");
             return;
         }
         try {
-            System.out.println("aget: " + agentArgs);
             initiateAgent(agentArgs, inst);
         } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
                  InstantiationException | IllegalAccessException e) {
             LogUtils.logit(e.getMessage());
             LogUtils.logit(e.getStackTrace().toString());
         }
-//             printLoadedClass(inst);
 
     }
-
-    public static void printLoadedClass(Instrumentation inst) {
-        StringUtils.println("All loaded classes: ");
-        for (Class<?> clazz : inst.getAllLoadedClasses()) {
-            if (clazz != null) {
-                try {
-                    // Get class
-//                    if (clazz.getPackage().toString().contains("org.example")) {
-//                        String className = clazz.toString();
-//                        StringUtils.println();(className);
-//                    }
-                    StringUtils.println("Class: " + clazz.getName() + ", Class Loader: " + clazz.getClassLoader());
-                } catch (Exception e) {
-                    System.err.println("Error finding class: " + e.getMessage());
-                }
-//
-            }
-        }
-
-    }
-
 
 }

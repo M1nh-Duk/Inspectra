@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static org.IAP491G3.Agent.Loader.Contraints.*;
-import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentDirectory;
 import static org.IAP491G3.Agent.Utils.PathUtils.getCurrentJarPath;
 import static org.IAP491G3.Agent.Utils.StringUtils.*;
 
@@ -23,8 +22,7 @@ public class AgentAttacher {
             int pid = Integer.parseInt(processId.trim());
 
             Object vm = vmLoader.attach(processId);
-//            System.out.println("loaderFileUrl.toURI()).getAbsolutePath(): ");
-//            vmLoader.loadAgent(vm, new File(getAgentFileUrl().toURI()).getAbsolutePath(), args);
+
             vmLoader.loadAgent(vm, getCurrentJarPath(), args);
             vmLoader.detach(vm);
         }
@@ -62,9 +60,7 @@ public class AgentAttacher {
             args = addStringToStringArray(args, WHITELIST_CLASSES);
             args = addStringToStringArray(args, UPLOAD_FOLDER);
 
-            //            attachJvm(args[1].trim(), args[0], vmProxy);
-            attachJvm(autoLoadingJVM(vmProxy), Arrays.toString(args), vmProxy);
-//            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
+            attachJvm(args[1].trim(), Arrays.toString(args), vmProxy);
         } else if ("list".equalsIgnoreCase(args[0])) {
             printProcessList(vmProxy.listJvmPid());
         } else if ("config".equalsIgnoreCase(args[0])) {
@@ -111,7 +107,6 @@ public class AgentAttacher {
         }
         try (FileInputStream in = new FileInputStream(CONFIG_FILE)) {
             properties.load(in);
-            System.out.println("Property: " + properties.getProperty("UPLOAD_FOLDER_PATH"));
             UPLOAD_FOLDER = properties.getProperty("UPLOAD_FOLDER_PATH");
             System.out.println("UPLOAD FOLDER: " + UPLOAD_FOLDER);
             String whitelist = properties.getProperty("WHITELIST_CLASSES");

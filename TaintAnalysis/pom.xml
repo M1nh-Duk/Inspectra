@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>5.1.8.RELEASE</version>
+            <version>6.2.0</version>
         </dependency>
 
         <dependency>
@@ -82,6 +82,7 @@
                         </configuration>
                     </execution>
                 </executions>
+
             </plugin>
         </plugins>
     </build>

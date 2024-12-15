@@ -142,8 +142,6 @@ public class AliasManager {
      * @return
      */
     public synchronized Set<AccessPath> getAliases(Stmt stmt, SootMethod method, Value value) {
-        //log.info(method.getActiveBody().toString());
-        //log.info("getAliases call for: " + stmt + " in " + method);
         if (disableAliasing) {
             return Collections.emptySet();
         }

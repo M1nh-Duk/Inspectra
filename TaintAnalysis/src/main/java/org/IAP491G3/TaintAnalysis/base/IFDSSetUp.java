@@ -10,13 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
 public abstract class IFDSSetUp {
 
     protected static JimpleIFDSSolver<?, ?> solver = null;
 
-    protected JimpleIFDSSolver<?, ?> executeStaticAnalysis(String targetTestClassName,String dumpFolder ) {
-        setupSoot(targetTestClassName,dumpFolder);
+    protected JimpleIFDSSolver<?, ?> executeStaticAnalysis(String targetTestClassName, String dumpFolder) {
+        setupSoot(targetTestClassName, dumpFolder);
         registerSootTransformers();
         executeSootTransformers();
         if (solver == null) {
@@ -45,19 +44,15 @@ public abstract class IFDSSetUp {
      * This method provides the options to soot to analyse the respecive
      * classes.
      */
-    private void setupSoot(String targetTestClassName,String dumpFolder) {
+    private void setupSoot(String targetTestClassName, String dumpFolder) {
         G.reset();
         String userdir = System.getProperty("user.dir");
         String javaHome = System.getProperty("java.home");
 
-//        String sootCp = userdir + File.separator + "target" + File.separator + "test-classes" + File.pathSeparator + javaHome + File.separator + "lib" + File.separator + "rt.jar";
-//        String sootCp = JSP_FOLDER  + DUMP_DIR + File.separator+ javaHome + File.separator + "lib" + File.separator + "rt.jar";
-//        System.out.println("sootCp: " + sootCp);
-//        Options.v().set_soot_classpath(sootCp);
         StringBuilder sootCpBuilder = new StringBuilder();
-        System.out.println("Soot class: " + targetTestClassName);
+
         sootCpBuilder.append(dumpFolder).append(File.pathSeparator);
-        System.out.println("Soot dumpFolder: " + dumpFolder);
+
         sootCpBuilder.append(javaHome).append(File.separator).append("lib").append(File.separator).append("rt.jar");
         String sootCp = sootCpBuilder.toString();
         Options.v().set_soot_classpath(sootCp);
@@ -78,41 +73,21 @@ public abstract class IFDSSetUp {
         Scene.v().addBasicClass("java.lang.ProcessBuilder", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.Runtime", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.reflect.Method", SootClass.SIGNATURES);
-        System.out.println("TAINT targetTestClassName: "+ targetTestClassName);
+
         SootClass c = Scene.v().forceResolve(targetTestClassName, SootClass.BODIES);
-//        if (c.isPhantom()) {
-//            System.out.println("The class is a phantom: " + c.getName());
-//        } else {
-//            System.out.println("Successfully converted to SootClass: " + c.getName());
-
-//            // Example: Print out all methods in the SootClass
-//            c.getMethods().forEach(method -> {
-//                System.out.println("Method: " + method.getName());
-//            });
-
-//            System.out.println("========== forceResolve class success with class: " + targetTestClassName);
-
-            if (c != null) {
-                c.setApplicationClass();
-            }
-            Scene.v().loadNecessaryClasses();
+        if (c != null) {
+            c.setApplicationClass();
+        }
+        Scene.v().loadNecessaryClasses();
 //        }
     }
 
     protected List<SootMethod> getEntryPointMethods() {
         List<SootMethod> entryPoints = new ArrayList<>();
         for (SootClass c : Scene.v().getApplicationClasses()) {
-//            System.out.println("Detect sootclass: " + c.getName());
-//            if (c.getMethods().isEmpty()) {
-//                System.out.println("c.getMethods is null");
-//            }
             int methodCount = c.getMethodCount();
-//            System.out.println("Method count for class " + c.getName() + ": " + methodCount);
-
             for (SootMethod m : c.getMethods()) {
-//                System.out.println("SootMethod: " + m.getName());
                 if (m.hasActiveBody()) {
-//                    System.out.println("M has body!");
                     // Add all methods with active bodies as entry points
                     entryPoints.add(m);
                 }

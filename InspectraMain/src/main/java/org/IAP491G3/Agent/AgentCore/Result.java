@@ -14,7 +14,7 @@ public class Result {
     private Boolean isRetransformed;
     private Boolean isJSP;
     private Boolean isJspFileDeleted;
-    private Map<String, List<String>>  filterResult;
+    private Map<String, List<String>> signatureBasedDetectionResult;
 
 
     public void setJSP(Boolean JSP) {
@@ -31,10 +31,10 @@ public class Result {
         this.isRetransformed = false;
         this.isJspFileDeleted = false;
     }
-    public Map<String, List<String>> getFilterResult() {return filterResult;    }
+    public Map<String, List<String>> getSignatureDetectionResult() {return signatureBasedDetectionResult;    }
 
-    public void setFilterResult(Map<String, List<String>> filterResult) {
-        this.filterResult = filterResult;
+    public void setSignatureDetectionResult(Map<String, List<String>> signatureBasedDetectionResult) {
+        this.signatureBasedDetectionResult = signatureBasedDetectionResult;
     }
 
     public int getRiskScore() {

@@ -6,14 +6,12 @@ import javassist.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.nio.file.Files;
 import java.util.*;
 
 import org.benf.cfr.reader.api.CfrDriver;
 import org.benf.cfr.reader.api.OutputSinkFactory;
-import static org.IAP491G3.Agent.AgentCore.MemoryTransformer.systemClassPool;
 import static org.IAP491G3.Agent.Loader.Contraints.DUMP_DIR;
 import static org.IAP491G3.Agent.Utils.PathUtils.createDumpFolder;
 import static org.IAP491G3.Agent.Utils.StringUtils.getOutputPath;
@@ -33,7 +31,6 @@ public class ClassUtils {
         for (Class<?> clazz : loadedClasses) {
             String clazzNameFull = clazz.getName().toLowerCase();
             if (clazzNameFull.endsWith(className)) {
-//                System.out.println("Method getLoadedClassObj successfully, Class: " + clazz.getName());
                 return clazz;
             }
         }
@@ -46,7 +43,6 @@ public class ClassUtils {
         for (Class<?> clazz : loadedClasses) {
             String clazzNameFull = clazz.getName().toLowerCase();
             if (clazzNameFull.equals(className)) {
-                System.out.println("Method getLoadedClassObj successfully, Class: " + clazz.getName());
                 return clazz;
             }
         }
@@ -67,7 +63,6 @@ public class ClassUtils {
 
     public static void saveBytecodeToFile(CtClass ctClass, String className, String folder) throws IOException {
         String outputPath = getOutputPath(className,folder);
-        System.out.println("outputPath: " + outputPath);
         File outputFile = new File(outputPath);
         if (outputFile.exists()) {
             StringUtils.println(outputPath + " already exists");
@@ -76,7 +71,7 @@ public class ClassUtils {
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             fos.write(ctClass.toBytecode());
             ctClass.detach();
-            System.out.println("Bytecode saved to: " + outputFile.getAbsolutePath());
+            StringUtils.println("Bytecode saved to: " + outputFile.getAbsolutePath());
         } catch (CannotCompileException e) {
             throw new RuntimeException(e);
         }
@@ -101,10 +96,8 @@ public class ClassUtils {
         if (DUMP_DIR == null){
             createDumpFolder();
         }
-        System.out.println("DD: " + DUMP_DIR);
-        ClassPool classPool = systemClassPool;
+        ClassPool classPool = ClassPool.getDefault(); //systemClassPool;
         Class<?> classObj = getLoadedClassObjByFullPath(inst, className);
-//        System.out.println("classObj test: " + classObj.getName());
         classPool.insertClassPath(new ClassClassPath(classObj));
         CtClass ctClass = classPool.get(className);
         saveBytecodeToFile(ctClass, className,DUMP_DIR);

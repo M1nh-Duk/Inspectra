@@ -17,7 +17,6 @@ public class MemoryTransformer implements ClassFileTransformer {
         put("org.springframework.web.servlet.handler.AbstractUrlHandlerMapping", "registerHandler");
         put("java.lang.reflect.Field", "get");
         put("org.apache.tomcat.util.descriptor.web.FilterDef", "setFilterClass");
-//        put("URLClassLoader", "defineClass");
         put("org.apache.catalina.core.StandardContext", Arrays.toString(new String[]{"addApplicationEventListener", "addServletMappingDecoded", "addServletMapping"}));
         put("org.apache.catalina.core.StandardWrapper", "setServletClass");
     }};
@@ -38,11 +37,6 @@ public class MemoryTransformer implements ClassFileTransformer {
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
         boolean isSuspiciousClass = false;
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-//        System.out.println("==================\nTRansformer executed");
-//        System.out.println("ClassName: " + className);
-//        System.out.println("Classloader: " + loader);
-
-//        String onlyClassName = className.substring(className.lastIndexOf("/") + 1);
           String convertedClassName = className.replace("/","."); // Remove the "/" in the className. Ex: org.IAP491G3.TaintAnalysis.Utils/StringUtils -> org.IAP491G3.TaintAnalysis.Utils.StringUtils;
         for (String malClassName : suspiciousClassAndMethod.keySet()) {
             if (convertedClassName.equals(malClassName)) {
@@ -53,7 +47,6 @@ public class MemoryTransformer implements ClassFileTransformer {
         if (isSuspiciousClass) {
             try {
 
-//                System.out.println("Suspicious class: " + className);
                 ClassPool.getDefault().insertClassPath(new ClassClassPath(classBeingRedefined));
                 ClassPool classPool = ClassPool.getDefault();
                 classPool.appendClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
@@ -64,8 +57,6 @@ public class MemoryTransformer implements ClassFileTransformer {
 
                 systemClassPool = classPool;
                 String targetMethodName = suspiciousClassAndMethod.get(convertedClassName); // get the class only, not package
-//                System.out.println("targetMethodName: " + targetMethodName);
-
                 return mainProbe(classPool, convertedClassName, targetMethodName);
 
             } catch (Exception e) {
@@ -73,7 +64,6 @@ public class MemoryTransformer implements ClassFileTransformer {
                 e.printStackTrace();
             }
         }
-//        System.out.println("END Transformer");
         return classfileBuffer;
     }
 
@@ -82,7 +72,6 @@ public class MemoryTransformer implements ClassFileTransformer {
             throw new IllegalArgumentException("ClassPool, targetClassName, and targetMethodName must not be null.");
         }
 
-//        System.out.println("==================== Probe executed");
         CtClass ctClazz;
         CtMethod ctMethod;
         Set<String> transformedClass = invokeAgentCacheMethodWithCast(Worker.workerAgentCache, "getTransformedClass", Set.class, false);
@@ -91,12 +80,10 @@ public class MemoryTransformer implements ClassFileTransformer {
         List<String> targetMethodList = getTargetMethodList(targetMethodName); // Extracted method list creation
 
         try {
-//            System.out.println("fullPathClassName: " + fullPathClassName);
             ctClazz = classPool.get(targetClassName);
             // =========================================================================
             CtMethod isWhitelist = CtNewMethod.make(
                     "private static boolean isWhitelist(String className) {" +
-//                            "System.out.println(\"className: \" + className);"+
                             // Check if the class belongs to a known web framework or server package
                             "if (className.startsWith(\"org.apache.jsp.uploads\"))"+
                             "{"+
@@ -131,7 +118,7 @@ public class MemoryTransformer implements ClassFileTransformer {
             for (CtMethod declaredMethod : ctClazz.getDeclaredMethods()) {
                 for (String methodName : targetMethodList) {
                     if (declaredMethod.getName().equals(methodName)) {
-                        ctMethod = declaredMethod; // Use declaredMethod instead of re-fetch
+                        ctMethod = declaredMethod;
                         StringUtils.println("Injecting into CtClass: " + ctClazz.getName() + ", Method: " + ctMethod.getName());
                         ctMethod.insertBefore(generateInsertedCode(ctMethod.getName()));
                     }
@@ -155,21 +142,19 @@ private static String generateInsertedCode(String methodName) {
         if (methodName.equals("get")){
             return "";
         }
-    String customCode = ((methodName.equals("setFilterClass") || methodName.equals("setServletClass"))) ?
-            "java.lang.System.setProperty(propertyName, $1);":"java.lang.System.setProperty(propertyName, \"\"+$1.getClass());";
+    String customCode;
+        if (methodName.equals("registerMapping") || methodName.equals("registerHandler")){
+            customCode = "java.lang.System.setProperty(propertyName, \"\"+$2.getClass());";
+        }
+        else{
+            customCode = ((methodName.equals("setFilterClass") || methodName.equals("setServletClass"))) ?
+                    "java.lang.System.setProperty(propertyName, $1);":"java.lang.System.setProperty(propertyName, \"\"+$1.getClass());";
+        }
+
     return "{ " +
             "try { " +
-//            "   System.out.println(\"=============== PROBE INJECT CODE EXECUTED\"); " +
-//                "System.out.println(Thread.currentThread().getContextClassLoader());" +
 
             "StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();" +
-//            "System.out.println(\"Stack trace: \"); " +
-//            "for (int i = 0; i < stackTrace.length; i++) {" +
-//            "StackTraceElement currentElement = stackTrace[i];" +
-//            "String currentClassName = currentElement.getClassName();" +
-//            "System.out.println(currentElement);" +
-//            "}"+
-
             "StackTraceElement maliciousClass = stackTrace[2];" +
             "String result = maliciousClass.getClassName();"+
             "if (!isWhitelist(maliciousClass.getClassName())){"+
@@ -182,16 +167,10 @@ private static String generateInsertedCode(String methodName) {
                     "}"+
             "}"+
 
-//            "System.out.println(\"THIS: \" + $0); " +
-//            "System.out.println(\"DETECTED $1 MALICIOUS OF PARAM: \" + $1.getClass()); " +
-//            "System.out.println(\"DETECTED MALICIOUS OF PARAM: \" + $1); " +
             "String propertyName = \"MAL__" + methodName + "__\" + result +\"__\" + System.currentTimeMillis();" +
             customCode+
-//            "System.out.println(\"Set system property successfully: \" + propertyName + \":\" + java.lang.System.getProperty(propertyName)); " +
-//            "System.out.println(\"END OF PROBE INJECT CODE\"); " +
             "}"+
             "} catch (Exception e) { " +
-            "System.out.println(\"HELLO: \"); " +
             "System.out.println(\"Cause: \" + e.getCause().toString());" +
             "e.printStackTrace();" +
                 "} " +

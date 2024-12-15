@@ -83,11 +83,6 @@ public class TaintManager extends IFDSSetUp {
         List<SootMethod> entryPoints = getEntryPointMethods(); // Get all entry points
         Set<String> result = new HashSet<>();
         boolean containsMaliciousIndicator = false; // Flag to check for malicious indicators
-
-        if (entryPoints.isEmpty()) {
-            System.out.println("entryPoints is empty");
-        }
-
         for (SootMethod m : entryPoints) {
             if (m == null || !m.hasActiveBody()) {
                 continue;
@@ -102,27 +97,21 @@ public class TaintManager extends IFDSSetUp {
             }
 
             // Log method details and its statements
-//            System.out.println("SootMethod: " + m.getSignature());
             for (Unit unit : activeBody.getUnits()) {
                 String unitString = unit.toString();
-//                System.out.println("UNIT STRING: " + unitString);
-                // Check for sinks: ProcessBuilder.start, Runtime.exec (String), Runtime.exec (String[]), and Method.invoke
+            // Check for sinks: ProcessBuilder.start, Runtime.exec (String), Runtime.exec (String[]), and Method.invoke
                 if (unitString.contains("java.lang.ProcessBuilder") && unitString.contains("start")) {
                     containsMaliciousIndicator = true;
-//                    System.out.println("Potential malicious indicator found in statement (ProcessBuilder.start): " + unitString);
                 } else if (unitString.contains("java.lang.Runtime") && unitString.contains("exec")) {
                     if (unitString.contains("(java.lang.String)") || unitString.contains("(java.lang.String[])")) {
                         containsMaliciousIndicator = true;
-//                        System.out.println("Potential malicious indicator found in statement (Runtime.exec): " + unitString);
                     }
                 }
-                else if (unitString.contains("java.lang.reflect.Method") && unitString.contains("invoke")) {
-                    containsMaliciousIndicator = true;
-//                    System.out.println("Potential malicious indicator found in statement (Method.invoke): " + unitString);
-                }
+//                else if (unitString.contains("java.lang.reflect.Method") && unitString.contains("invoke")) {
+//                    containsMaliciousIndicator = true;
+//                }
                 else if (unitString.contains("ClassLoader")) {
                     containsMaliciousIndicator = true;
-//                    System.out.println("Potential malicious indicator found in statement (ClassLoader): " + unitString);
                 }
             }
 
@@ -140,14 +129,6 @@ public class TaintManager extends IFDSSetUp {
             }
         }
 
-//        System.out.println("================ TAINT RESULT");
-//        if (containsMaliciousIndicator) {
-//            System.out.println("CLASS IS MALICIOUS");
-//        } else {
-//            System.out.println("CLASS IS NOT MALICIOUS");
-//        }
-//
-//        System.out.print(result + "\n");
         return containsMaliciousIndicator;
     }
 
@@ -156,32 +137,21 @@ public class TaintManager extends IFDSSetUp {
         return Files.readAllBytes(Paths.get(classFilePath));
     }
 
-//    public boolean taint(String className, ArrayList<String> userDefinedFolders) {
-//        System.out.println("================ TAINT METHOD EXECUTED !!!");
-//        System.out.println("Taint method received: " + className);
-//        boolean check = false;
-////        AtomicReference<Set<String>> defaultIDEResult = new AtomicReference<>();
-//        JimpleIFDSSolver<?, ? extends InterproceduralCFG<Unit, SootMethod>> analysis = executeStaticAnalysis(className, userDefinedFolders);
-//        check = getRsult(analysis);
-//        return check;
-//    }
+
 
 
     public boolean taint(String className, String userDefinedFolders) {
-//        System.out.println("TAINT METHOD EXECUTED !!!");
-//        System.out.println("Taint method received: " + className);
-//        AtomicReference<Set<String>> defaultIDEResult = new AtomicReference<>();
         AtomicBoolean check = new AtomicBoolean(false);
         Thread analysisThread = new Thread(() -> {
             try {
                 JimpleIFDSSolver<?, ? extends InterproceduralCFG<Unit, SootMethod>> analysis = executeStaticAnalysis(className, userDefinedFolders);
                 check.set(getResult(analysis));
             } finally {
-                System.out.println("Taint analysis completed, thread shutting down.");
+//                System.out.println("Taint analysis completed, thread shutting down.");
 
             }
         });
-//        System.out.println("================ TAINT RESULT");
+//
 
         analysisThread.start();
 
@@ -190,9 +160,6 @@ public class TaintManager extends IFDSSetUp {
         } catch (InterruptedException e) {
             System.err.println("Analysis thread was interrupted: " + e.getMessage());
             Thread.currentThread().interrupt();
-        }
-        finally {
-//            System.out.println("Thread state after join: " + analysisThread.getState());
         }
         return check.get();
 
