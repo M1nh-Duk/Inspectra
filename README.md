@@ -30,22 +30,29 @@ Ensure you have the following installed on your system:
 
 ### How to run
 
-1.Buid from source code
+1. Buid from source code
 
-   - Clone the repository:
+   - Clone the repository
    ```bash
    git clone https://github.com/M1nh-Duk/Inspectra.git
    cd Inspectra
    ```
-   - Build with Maven
+   - Maven clean
    ```bash
      mvn clean install
    ```
+   
+   - Build project: Using your IDE or compile each file manually (^_^)
+   - Package jar file
+   
+   ```bash
+     mvn package
+   ```
 2. Or simply download the latest release
-4. Config
+3. Config
    - Config folder path for upload folder of the web
    - Config whitelist classes that are either mistakenly detected classes or important classes of your web application that you don't want to be affect.
-5. Usage
+4. Usage
    ```bash
     Usage: java -jar Inspectra.jar [Options] [Flags]
     Options:
@@ -58,7 +65,8 @@ Ensure you have the following installed on your system:
       -auto: Automatically retransformed suspicious class and delete JSP file if found
       -silent: Do not print out to console
    ```
-6. Example
+   
+5. Example
    ``` bash
    EXAMPLES :
     java -jar Inspectra.jar attach 10001
