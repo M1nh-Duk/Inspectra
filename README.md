@@ -28,18 +28,24 @@ Ensure you have the following installed on your system:
 - JDK 8 (works best)
 - Apache Tomcat 8/9, (compatible with JDK 8)
 
-### Guide
+### How to run
 
-1. Clone the repository:
+1.Buid from source code
+
+   - Clone the repository:
    ```bash
    git clone https://github.com/M1nh-Duk/Inspectra.git
    cd Inspectra
    ```
-2. Build: Build with Maven
-3. Config
+   - Build with Maven
+   ```bash
+     mvn clean install
+   ```
+2. Or simply download the latest release
+4. Config
    - Config folder path for upload folder of the web
    - Config whitelist classes that are either mistakenly detected classes or important classes of your web application that you don't want to be affect.
-4. Usage
+5. Usage
    ```bash
     Usage: java -jar Inspectra.jar [Options] [Flags]
     Options:
@@ -52,7 +58,7 @@ Ensure you have the following installed on your system:
       -auto: Automatically retransformed suspicious class and delete JSP file if found
       -silent: Do not print out to console
    ```
-5. Example
+6. Example
    ``` bash
    EXAMPLES :
     java -jar Inspectra.jar attach 10001
