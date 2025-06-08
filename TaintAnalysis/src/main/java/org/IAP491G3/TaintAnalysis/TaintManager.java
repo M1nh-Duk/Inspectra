@@ -105,7 +105,7 @@ public class TaintManager extends IFDSSetUp {
             }
         }
 
-        return containsMaliciousIndicator;
+        return result.isEmpty();
     }
 
 
