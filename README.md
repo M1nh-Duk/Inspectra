@@ -3,13 +3,14 @@
 
 ## Overview
 
-**Inspectra** is a lightweight monitoring tool, designed to detect and neutralize memory webshell (currently for detecting techniques that utilize Tomcat web components and Spring framwork components) on Apache Tomcat server. This repository includes source code and an executable JAR file of the tool.
+**Inspectra** is a lightweight monitoring tool, utilizing static analysis (using Taint Analysis) and Signature-based detection to detect and neutralize memory webshell (current development is to detect memshell techniques that focus on Tomcat web components and Spring framework components) on Apache Tomcat server.
+<br>This repo includes source code and an executable JAR file of the tool.
 
 ## Features
 
 - Detect memory webshell in Tomcat environment at real time.
 - Automatically neutralize process creation ability of the memshell so that it cannot execute command on server.
-- Raise alerts boh on the console of the hosted JVM or write to a file in the form of simple JSON format which can be integrated with centralized security solution like SIEM for real-time monitoring.
+- Raise alerts both on the console of the hosted JVM or write to a file in the form of simple JSON format which can be integrated with centralized security solution like SIEM for real-time monitoring.
 
 ## Technologies Used
 
